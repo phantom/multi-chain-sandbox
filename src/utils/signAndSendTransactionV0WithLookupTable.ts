@@ -1,17 +1,7 @@
-import {
-  Connection,
-  PublicKey,
-  SystemProgram,
-  TransactionMessage,
-  VersionedTransaction,
-} from '@solana/web3.js';
+import { Connection, PublicKey, SystemProgram, TransactionMessage, VersionedTransaction } from '@solana/web3.js';
 
-import { PhantomProvider } from '../types';
-import {
-  createAddressLookupTable,
-  extendAddressLookupTable,
-  signAndSendTransaction,
-} from '.';
+import { PhantomSolanaProvider } from '../types';
+import { createAddressLookupTable, extendAddressLookupTable, signAndSendTransaction } from '.';
 import { Logs } from '../components';
 
 /**
@@ -25,13 +15,12 @@ import { Logs } from '../components';
  * @returns {VersionedTransaction}   a transactionV0
  */
 const signAndSendTransactionV0WithLookupTable = async (
-  provider: PhantomProvider,
+  provider: PhantomSolanaProvider,
   publicKey: PublicKey,
   connection: Connection,
   blockhash: string,
   lookupTableAddress: PublicKey
 ): Promise<string> => {
-
   // connect to the cluster and get the minimum rent for rent exempt status
   // perform this step to get an "arbitrary" amount to transfer
   let minRent = await connection.getMinimumBalanceForRentExemption(0);

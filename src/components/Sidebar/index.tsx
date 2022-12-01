@@ -7,7 +7,7 @@ import { GRAY, REACT_GRAY, PURPLE, WHITE, DARK_GRAY } from '../../constants';
 import { hexToRGB } from '../../utils';
 
 import Button from '../Button';
-import { ConnectedMethods } from '../../App';
+import { ConnectedAccounts, ConnectedMethods } from '../../App';
 
 // =============================================================================
 // Styled Components
@@ -135,6 +135,7 @@ const Tag = styled.p`
 // =============================================================================
 
 interface Props {
+  connectedAccounts: ConnectedAccounts;
   publicKey?: PublicKey;
   connectedMethods: ConnectedMethods[];
   connect: () => Promise<void>;
@@ -143,10 +144,10 @@ interface Props {
 // =============================================================================
 // Main Component
 // =============================================================================
-
+[];
 const Sidebar = React.memo((props: Props) => {
-  const { publicKey, connectedMethods, connect } = props;
-
+  const { connectedAccounts, publicKey, connectedMethods, connect } = props;
+  const { ethereum, solana } = connectedAccounts;
   return (
     <Main>
       <Body>
@@ -154,12 +155,13 @@ const Sidebar = React.memo((props: Props) => {
           <img src="https://phantom.app/img/phantom-logo.svg" alt="Phantom" width="200" />
           <Subtitle>CodeSandbox</Subtitle>
         </Link>
-        {publicKey ? (
+        {solana && ethereum ? (
           // connected
           <>
             <div>
               <Pre>Connected as</Pre>
-              <Badge>{publicKey.toBase58()}</Badge>
+              <Badge>{solana.toBase58()}</Badge>
+              <Badge>{ethereum}</Badge>
               <Divider />
             </div>
             {connectedMethods.map((method, i) => (

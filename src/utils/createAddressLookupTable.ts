@@ -6,13 +6,13 @@ import {
   VersionedTransaction,
 } from '@solana/web3.js';
 
-import { PhantomProvider } from '../types';
+import { PhantomSolanaProvider } from '../types';
 import { signAndSendTransaction } from '.';
 
 /**
  * 1. Creates an Address Lookup Table Instruction
  * 2. Signs and sends it in a transactionV0
- * 
+ *
  * @param   {String}      publicKey  a public key
  * @param   {Connection}  connection an RPC connection
  * @param   {String}  publicKey recent blockhash
@@ -20,12 +20,11 @@ import { signAndSendTransaction } from '.';
  *          signature and lookup table address
  */
 const createAddressLookupTable = async (
-  provider: PhantomProvider,
+  provider: PhantomSolanaProvider,
   publicKey: PublicKey,
   connection: Connection,
   blockhash: string
 ): Promise<[string, PublicKey]> => {
-
   // get current `slot`
   let slot = await connection.getSlot();
 
@@ -50,7 +49,7 @@ const createAddressLookupTable = async (
   const lookupSignature = await signAndSendTransaction(provider, lookupTransaction);
   console.log('Sent transaction for lookup table:', lookupSignature);
 
-  return [lookupSignature, lookupTableAddress]
+  return [lookupSignature, lookupTableAddress];
 };
 
 export default createAddressLookupTable;

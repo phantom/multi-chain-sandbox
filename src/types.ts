@@ -1,4 +1,5 @@
 import { PublicKey, Transaction, VersionedTransaction, SendOptions } from '@solana/web3.js';
+import { providers } from 'ethers';
 
 type DisplayEncoding = 'utf8' | 'hex';
 
@@ -12,13 +13,14 @@ type PhantomRequestMethod =
   | 'signAndSendTransactionV0WithLookupTable'
   | 'signTransaction'
   | 'signAllTransactions'
-  | 'signMessage';
+  | 'signMessage'
+  | 'eth_sendTransaction';
 
 interface ConnectOpts {
   onlyIfTrusted: boolean;
 }
 
-export interface PhantomProvider {
+export interface PhantomSolanaProvider {
   publicKey: PublicKey | null;
   isConnected: boolean | null;
   signAndSendTransaction: (
@@ -35,6 +37,14 @@ export interface PhantomProvider {
   on: (event: PhantomEvent, handler: (args: any) => void) => void;
   request: (method: PhantomRequestMethod, params: any) => Promise<unknown>;
 }
+
+export type PhantomEthereumProvider = any;
+// export type PhantomEthereumProvider = providers.Web3Provider;
+
+export type PhantomMultiChainProvider = {
+  ethereum: PhantomEthereumProvider;
+  solana: PhantomSolanaProvider;
+};
 
 export type Status = 'success' | 'warning' | 'error' | 'info';
 

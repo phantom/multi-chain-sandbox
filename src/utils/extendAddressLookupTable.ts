@@ -7,13 +7,13 @@ import {
   VersionedTransaction,
 } from '@solana/web3.js';
 
-import { PhantomProvider } from '../types';
+import { PhantomSolanaProvider } from '../types';
 import { signAndSendTransaction } from '.';
 
 /**
  * 1. Extends (add addresses) the table
  * 2. Signs and sends the extension instruction
- * 
+ *
  * @param   {String}      publicKey  a public key
  * @param   {Connection}  connection an RPC connection
  * @param   {String}  publicKey recent blockhash
@@ -21,13 +21,12 @@ import { signAndSendTransaction } from '.';
  * @returns {String} signature of confirmed transaction
  */
 const extendAddressLookupTable = async (
-  provider: PhantomProvider,
+  provider: PhantomSolanaProvider,
   publicKey: PublicKey,
   connection: Connection,
   blockhash: string,
   lookupTableAddress: PublicKey
 ): Promise<string> => {
-
   // add addresses to the `lookupTableAddress` table via an `extend` instruction
   const extendInstruction = AddressLookupTableProgram.extendLookupTable({
     payer: publicKey,
@@ -59,7 +58,7 @@ const extendAddressLookupTable = async (
   }
   console.log('Sent transaction for lookup table extension:', extensionSignature);
 
-  return extensionSignature
+  return extensionSignature;
 };
 
 export default extendAddressLookupTable;

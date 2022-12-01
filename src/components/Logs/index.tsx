@@ -8,6 +8,7 @@ import { BLACK, GRAY } from '../../constants';
 
 import Button from '../Button';
 import Log from './Log';
+import { ConnectedAccounts } from '../../App';
 
 // =============================================================================
 // Styled Components
@@ -47,6 +48,7 @@ const Row = styled.div`
 // =============================================================================
 
 interface Props {
+  connectedAccounts: ConnectedAccounts;
   publicKey: PublicKey | null;
   logs: TLog[];
   clearLogs: () => void;
@@ -57,8 +59,8 @@ interface Props {
 // =============================================================================
 
 const Logs = React.memo((props: Props) => {
-  const { publicKey, logs, clearLogs } = props;
-
+  const { connectedAccounts, publicKey, logs, clearLogs } = props;
+  const { ethereum, solana } = connectedAccounts;
   return (
     <StyledSection>
       {logs.length > 0 ? (
@@ -72,7 +74,7 @@ const Logs = React.memo((props: Props) => {
         <Row>
           <span>{'>'}</span>
           <PlaceholderMessage>
-            {publicKey ? (
+            {ethereum && solana ? (
               // connected
               <>
                 Click a button and watch magic happen...{' '}
