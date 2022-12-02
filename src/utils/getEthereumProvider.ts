@@ -1,3 +1,5 @@
+import { Web3Provider } from '@ethersproject/providers';
+import { providers } from 'ethers';
 import { PhantomEthereumProvider } from '../types';
 
 /**
@@ -7,9 +9,9 @@ import { PhantomEthereumProvider } from '../types';
 const getEthereumProvider = (): PhantomEthereumProvider | undefined => {
   if ('phantom' in window) {
     const anyWindow: any = window;
-    const provider = anyWindow.phantom?.ethereum;
-
-    if (provider?.isPhantom) {
+    const ethereum = anyWindow.phantom?.ethereum;
+    if (ethereum.isPhantom) {
+      const provider = new providers.Web3Provider(ethereum);
       return provider;
     }
   }

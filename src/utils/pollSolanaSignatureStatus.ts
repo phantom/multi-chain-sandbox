@@ -12,7 +12,7 @@ const MAX_POLLS = 30;
  * @param   {Function}   createLog  a function to create log
  * @returns
  */
-const pollSignatureStatus = async (
+const pollSolanaSignatureStatus = async (
   signature: string,
   connection: Connection,
   createLog: (log: TLog) => void
@@ -65,4 +65,4 @@ const pollSignatureStatus = async (
   }, POLLING_INTERVAL);
 };
 
-export default pollSignatureStatus;
+export default pollSolanaSignatureStatus;

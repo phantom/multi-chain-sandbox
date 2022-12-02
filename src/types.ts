@@ -1,5 +1,6 @@
 import { PublicKey, Transaction, VersionedTransaction, SendOptions } from '@solana/web3.js';
 import { providers } from 'ethers';
+import { Web3Provider } from '@ethersproject/providers';
 
 type DisplayEncoding = 'utf8' | 'hex';
 
@@ -41,12 +42,25 @@ export interface PhantomSolanaProvider {
 }
 
 export type PhantomEthereumProvider = any;
-// export type PhantomEthereumProvider = providers.Web3Provider;
+// export interface PhantomEthereumProvider {
+//   chainId: string;
+//   isMetaMask?: boolean;
+//   isPhantom: boolean;
+//   networkVersion: string;
+//   selectedAddress: string;
+//   _events: Object;
+//   _eventsCount: Object;
+//   _metamask: Object;
+// }
 
-export type PhantomMultiChainProvider = {
+export interface PhantomMultiChainProvider {
   ethereum: PhantomEthereumProvider;
   solana: PhantomSolanaProvider;
-};
+}
+
+export interface PhantomMultiChainProviderWithWeb3 extends PhantomMultiChainProvider {
+  web3: Web3Provider;
+}
 
 export type Status = 'success' | 'warning' | 'error' | 'info';
 

@@ -7,27 +7,29 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import styled from 'styled-components';
 import { clusterApiUrl, Connection, PublicKey } from '@solana/web3.js';
 
-// import {
-//   createAddressLookupTable,
-//   createTransferTransaction,
-//   createTransferTransactionV0,
-//   extendAddressLookupTable,
-//   getSolanaProvider,
-//   getEthereumProvider,
-//   pollSignatureStatus,
-//   sendEVMTransaction,
-//   signAllTransactions,
-//   signAndSendTransaction,
-//   signAndSendTransactionV0WithLookupTable,
-//   signMessage,
-//   signTransaction,
-// } from './utils';
+import {
+  //   createAddressLookupTable,
+  //   createTransferTransaction,
+  createTransferTransactionV0,
+  //   extendAddressLookupTable,
+  //   getSolanaProvider,
+  //   getEthereumProvider,
+  pollSolanaSignatureStatus,
+  //   sendEVMTransaction,
+  //   signAllTransactions,
+  signAndSendTransaction,
+  signMessageOnSolana,
+  //   signAndSendTransactionV0WithLookupTable,
+  //   signMessage,
+  //   signTransaction,
+} from './utils';
 
-import { PhantomEthereumProvider, PhantomMultiChainProvider, TLog } from './types';
+import { PhantomEthereumProvider, PhantomMultiChainProvider, PhantomMultiChainProviderWithWeb3, TLog } from './types';
 
 import { Logs, Sidebar, NoProvider } from './components';
 import detectPhantomMultiChainProvider from './utils/detectPhantomMultiChainProvider';
 import getPhantomMultiChainProvider from './utils/getPhantomMultiChainProvider';
+import signMessageOnEthereum from './utils/signMessageOnEthereum';
 
 // =============================================================================
 // Styled Components
@@ -87,7 +89,7 @@ interface Props {
  * @DEVELOPERS
  * The fun stuff!
  */
-const useProps = (provider: PhantomMultiChainProvider | null): Props => {
+const useProps = (provider: PhantomMultiChainProviderWithWeb3 | null): Props => {
   // const useProps = (): Props => {
   const [logs, setLogs] = useState<TLog[]>([]);
 
@@ -104,7 +106,7 @@ const useProps = (provider: PhantomMultiChainProvider | null): Props => {
 
   useEffect(() => {
     if (!provider) return;
-    const { solana, ethereum } = provider;
+    const { solana, ethereum, web3 } = provider;
 
     // attempt to eagerly connect
     solana.connect({ onlyIfTrusted: true }).catch(() => {
@@ -171,7 +173,7 @@ const useProps = (provider: PhantomMultiChainProvider | null): Props => {
           message: 'Attempting to switch accounts.',
         });
 
-        ethereum.send('eth_requestAccounts', []).catch((error) => {
+        web3.send('eth_requestAccounts', []).catch((error) => {
           createLog({
             providerType: 'ethereum',
             status: 'error',
@@ -226,196 +228,113 @@ const useProps = (provider: PhantomMultiChainProvider | null): Props => {
 
     return () => {
       solana.disconnect();
-      ethereum.disconnect();
     };
   }, [provider, createLog]);
 
-  // useEffect(() => {
-  //   if (!solanaProvider || !ethereumProvider) return;
+  /** Connect */
+  const handleConnect = useCallback(async () => {
+    if (!provider) return;
+    const { solana, ethereum, web3 } = provider;
 
-  //   // attempt to eagerly connect
-  //   solanaProvider.connect({ onlyIfTrusted: true }).catch(() => {
-  //     // fail silently
-  //   });
+    try {
+      await solana.connect();
+    } catch (error) {
+      createLog({
+        providerType: 'solana',
+        status: 'error',
+        method: 'connect',
+        message: error.message,
+      });
+    }
 
-  //   solanaProvider.on('connect', (publicKey: PublicKey) => {
-  //     createLog({
-  //       status: 'success',
-  //       method: 'connect',
-  //       message: `Connected to Solana account ${publicKey.toBase58()}`,
-  //     });
-  //   });
+    try {
+      const accounts = await web3.send('eth_requestAccounts', []);
+      createLog({
+        providerType: 'ethereum',
+        status: 'success',
+        method: 'connect',
+        message: `Connected to account ${accounts[0]}`,
+      });
+    } catch (error) {
+      createLog({
+        providerType: 'ethereum',
+        status: 'error',
+        method: 'connect',
+        message: error.message,
+      });
+    }
 
-  //   ethereumProvider.on('connect', (connectionInfo: { chainId: string }) => {
-  //     createLog({
-  //       status: 'success',
-  //       method: 'connect',
-  //       message: `Connected to EVM chain ${connectionInfo.chainId}`,
-  //     });
-  //   });
+    // const signer = web3.getSigner();
+    // console.log('signer', signer);
+    // const signedMessage = await signer.signMessage(message);
+    // console.log(signedMessage);
 
-  //   solanaProvider.on('disconnect', () => {
-  //     createLog({
-  //       status: 'warning',
-  //       method: 'disconnect',
-  //       message: '👋',
-  //     });
-  //   });
+    if (!ethereum.selectedAddress) {
+      console.log('Not connected on ethereum');
+    }
 
-  //   solanaProvider.on('accountChanged', (publicKey: PublicKey | null) => {
-  //     if (publicKey) {
-  //       createLog({
-  //         status: 'info',
-  //         method: 'accountChanged',
-  //         message: `Switched to account ${publicKey.toBase58()}`,
-  //       });
-  //     } else {
-  //       /**
-  //        * In this case dApps could...
-  //        *
-  //        * 1. Not do anything
-  //        * 2. Only re-connect to the new account if it is trusted
-  //        *
-  //        * ```
-  //        * solanaProvider.connect({ onlyIfTrusted: true }).catch((err) => {
-  //        *  // fail silently
-  //        * });
-  //        * ```
-  //        *
-  //        * 3. Always attempt to reconnect
-  //        */
+    // if (!solanaProvider) return;
 
-  //       createLog({
-  //         status: 'info',
-  //         method: 'accountChanged',
-  //         message: 'Attempting to switch accounts.',
-  //       });
+    // try {
+    //   await solanaProvider.connect();
+    // } catch (error) {
+    //   createLog({
+    //     status: 'error',
+    //     method: 'connect',
+    //     message: error.message,
+    //   });
+    // }
 
-  //       solanaProvider.connect().catch((error) => {
-  //         createLog({
-  //           status: 'error',
-  //           method: 'accountChanged',
-  //           message: `Failed to re-connect: ${error.message}`,
-  //         });
-  //       });
-  //     }
-  //   });
-
-  //   return () => {
-  //     solanaProvider.disconnect();
-  //     ethereumProvider.disconnect();
-  //   };
-  // }, [createLog]);
-
-  // /** SignAndSendTransaction */
-  // const handleSignAndSendTransaction = useCallback(async () => {
-  //   if (!solanaProvider) return;
-
-  //   try {
-  //     const transaction = await createTransferTransaction(solanaProvider.publicKey, connection);
-  //     createLog({
-  //       status: 'info',
-  //       method: 'signAndSendTransaction',
-  //       message: `Requesting signature for: ${JSON.stringify(transaction)}`,
-  //     });
-  //     const signature = await signAndSendTransaction(solanaProvider, transaction);
-  //     createLog({
-  //       status: 'info',
-  //       method: 'signAndSendTransaction',
-  //       message: `Signed and submitted transaction ${signature}.`,
-  //     });
-  //     pollSignatureStatus(signature, connection, createLog);
-  //   } catch (error) {
-  //     createLog({
-  //       status: 'error',
-  //       method: 'signAndSendTransaction',
-  //       message: error.message,
-  //     });
-  //   }
-  // }, [createLog]);
+    // try {
+    //   const accounts = await ethereumProvider.send('eth_requestAccounts', []);
+    //   createLog({
+    //     status: 'success',
+    //     method: 'connect',
+    //     message: `connected to EVM account ${accounts[0]}`,
+    //   });
+    // } catch (error) {
+    //   createLog({
+    //     status: 'error',
+    //     method: 'connect',
+    //     message: error.message,
+    //   });
+    // }
+  }, [provider, createLog]);
 
   // /** SignAndSendTransactionV0 */
-  // const handleSignAndSendTransactionV0 = useCallback(async () => {
-  //   if (!solanaProvider) return;
-
-  //   try {
-  //     const transactionV0 = await createTransferTransactionV0(solanaProvider.publicKey, connection);
-  //     createLog({
-  //       status: 'info',
-  //       method: 'signAndSendTransactionV0',
-  //       message: `Requesting signature for: ${JSON.stringify(transactionV0)}`,
-  //     });
-  //     const signature = await signAndSendTransaction(solanaProvider, transactionV0);
-  //     createLog({
-  //       status: 'info',
-  //       method: 'signAndSendTransactionV0',
-  //       message: `Signed and submitted transactionV0 ${signature}.`,
-  //     });
-  //     pollSignatureStatus(signature, connection, createLog);
-  //   } catch (error) {
-  //     createLog({
-  //       status: 'error',
-  //       method: 'signAndSendTransactionV0',
-  //       message: error.message,
-  //     });
-  //   }
-  // }, [createLog]);
-
-  // /** SignAndSendTransactionV0WithLookupTable */
-  // const handleSignAndSendTransactionV0WithLookupTable = useCallback(async () => {
-  //   if (!solanaProvider) return;
-  //   let blockhash = await connection.getLatestBlockhash().then((res) => res.blockhash);
-  //   try {
-  //     const [lookupSignature, lookupTableAddress] = await createAddressLookupTable(
-  //       solanaProvider,
-  //       solanaProvider.publicKey,
-  //       connection,
-  //       blockhash
-  //     );
-  //     createLog({
-  //       status: 'info',
-  //       method: 'signAndSendTransactionV0WithLookupTable',
-  //       message: `Signed and submitted transactionV0 to make an Address Lookup Table ${lookupTableAddress} with signature: ${lookupSignature}. Please wait for 5-7 seconds after signing the next transaction to be able to see the next transaction popup. This time is needed as newly appended addresses require one slot to warmup before being available to transactions for lookups.`,
-  //     });
-  //     const extensionSignature = await extendAddressLookupTable(
-  //       solanaProvider,
-  //       solanaProvider.publicKey,
-  //       connection,
-  //       blockhash,
-  //       lookupTableAddress
-  //     );
-  //     createLog({
-  //       status: 'info',
-  //       method: 'signAndSendTransactionV0WithLookupTable',
-  //       message: `Signed and submitted transactionV0 to extend Address Lookup Table ${extensionSignature}.`,
-  //     });
-
-  //     const signature = await signAndSendTransactionV0WithLookupTable(
-  //       solanaProvider,
-  //       solanaProvider.publicKey,
-  //       connection,
-  //       blockhash,
-  //       lookupTableAddress
-  //     );
-  //     createLog({
-  //       status: 'info',
-  //       method: 'signAndSendTransactionV0WithLookupTable',
-  //       message: `Signed and submitted transactionV0 with Address Lookup Table ${signature}.`,
-  //     });
-  //     pollSignatureStatus(signature, connection, createLog);
-  //   } catch (error) {
-  //     createLog({
-  //       status: 'error',
-  //       method: 'signAndSendTransactionV0WithLookupTable',
-  //       message: error.message,
-  //     });
-  //   }
-  // }, [createLog]);
+  const handleSignAndSendTransactionOnSolana = useCallback(async () => {
+    if (!provider) return;
+    const { solana } = provider;
+    try {
+      const transactionV0 = await createTransferTransactionV0(solana.publicKey, connection);
+      createLog({
+        providerType: 'solana',
+        status: 'info',
+        method: 'signAndSendTransactionV0',
+        message: `Requesting signature for: ${JSON.stringify(transactionV0)}`,
+      });
+      const signature = await signAndSendTransaction(solana, transactionV0);
+      createLog({
+        providerType: 'solana',
+        status: 'info',
+        method: 'signAndSendTransactionV0',
+        message: `Signed and submitted transactionV0 ${signature}.`,
+      });
+      pollSolanaSignatureStatus(signature, connection, createLog);
+    } catch (error) {
+      createLog({
+        providerType: 'solana',
+        status: 'error',
+        method: 'signAndSendTransactionV0',
+        message: error.message,
+      });
+    }
+  }, [provider, createLog]);
 
   // /** SignTransaction */
-  // const handleSignTransaction = useCallback(async () => {
-  //   if (!solanaProvider) return;
-
+  // const handleSolanaSignTransaction = useCallback(async () => {
+  //   if (!provider) return;
+  //   const { solana } = provider;
   //   try {
   //     const transaction = await createTransferTransaction(solanaProvider.publicKey, connection);
   //     createLog({
@@ -468,70 +387,49 @@ const useProps = (provider: PhantomMultiChainProvider | null): Props => {
   // }, [createLog]);
 
   // /** SignMessage */
-  // const handleSignMessage = useCallback(async () => {
-  //   if (!solanaProvider) return;
-
-  //   try {
-  //     const signedMessage = await signMessage(solanaProvider, message);
-  //     createLog({
-  //       status: 'success',
-  //       method: 'signMessage',
-  //       message: `Message signed: ${JSON.stringify(signedMessage)}`,
-  //     });
-  //     return signedMessage;
-  //   } catch (error) {
-  //     createLog({
-  //       status: 'error',
-  //       method: 'signMessage',
-  //       message: error.message,
-  //     });
-  //   }
-  // }, [createLog]);
-
-  /** Connect */
-  const handleConnect = useCallback(async () => {
-    console.log('connect');
+  const handleSignMessageOnSolana = useCallback(async () => {
     if (!provider) return;
-    const { solana, ethereum } = provider;
-
+    const { solana } = provider;
     try {
-      console.log('trying connect');
-      await solana.connect();
+      const signedMessage = await signMessageOnSolana(solana, message);
+      createLog({
+        providerType: 'solana',
+        status: 'success',
+        method: 'signMessage',
+        message: `Message signed: ${JSON.stringify(signedMessage)}`,
+      });
+      return signedMessage;
     } catch (error) {
       createLog({
         providerType: 'solana',
         status: 'error',
-        method: 'connect',
+        method: 'signMessage',
         message: error.message,
       });
     }
+  }, [provider, createLog]);
 
-    // if (!solanaProvider) return;
-
-    // try {
-    //   await solanaProvider.connect();
-    // } catch (error) {
-    //   createLog({
-    //     status: 'error',
-    //     method: 'connect',
-    //     message: error.message,
-    //   });
-    // }
-
-    // try {
-    //   const accounts = await ethereumProvider.send('eth_requestAccounts', []);
-    //   createLog({
-    //     status: 'success',
-    //     method: 'connect',
-    //     message: `connected to EVM account ${accounts[0]}`,
-    //   });
-    // } catch (error) {
-    //   createLog({
-    //     status: 'error',
-    //     method: 'connect',
-    //     message: error.message,
-    //   });
-    // }
+  // /** SignMessage */
+  const handleSignMessageOnEthereum = useCallback(async () => {
+    if (!provider) return;
+    const { web3 } = provider;
+    try {
+      const signedMessage = await signMessageOnEthereum(web3, message);
+      createLog({
+        providerType: 'ethereum',
+        status: 'success',
+        method: 'signMessage',
+        message: `Message signed: ${JSON.stringify(signedMessage)}`,
+      });
+      return signedMessage;
+    } catch (error) {
+      createLog({
+        providerType: 'ethereum',
+        status: 'error',
+        method: 'signMessage',
+        message: error.message,
+      });
+    }
   }, [provider, createLog]);
 
   /** Disconnect */
@@ -539,7 +437,6 @@ const useProps = (provider: PhantomMultiChainProvider | null): Props => {
     console.log('disconnect');
     if (!provider) return;
     const { solana } = provider;
-
     try {
       await solana.disconnect();
     } catch (error) {
@@ -590,10 +487,10 @@ const useProps = (provider: PhantomMultiChainProvider | null): Props => {
 
   const connectedMethods = useMemo(() => {
     return [
-      // {
-      //   name: '[Solana] Sign and Send Transaction',
-      //   onClick: handleSignAndSendTransaction,
-      // },
+      {
+        name: '[Solana] Sign and Send Transaction',
+        onClick: handleSignAndSendTransactionOnSolana,
+      },
       // {
       //   name: '[EVM] Sign and Send Transaction',
       //   onClick: handleEthSendTransaction,
@@ -606,10 +503,14 @@ const useProps = (provider: PhantomMultiChainProvider | null): Props => {
       //   name: 'Sign All Transactions',
       //   onClick: handleSignAllTransactions,
       // },
-      // {
-      //   name: 'Sign Message',
-      //   onClick: handleSignMessage,
-      // },
+      {
+        name: '[Solana] Sign Message',
+        onClick: handleSignMessageOnSolana,
+      },
+      {
+        name: '[EVM] Sign Message',
+        onClick: handleSignMessageOnEthereum,
+      },
       {
         name: 'Disconnect',
         onClick: handleDisconnect,
@@ -628,7 +529,9 @@ const useProps = (provider: PhantomMultiChainProvider | null): Props => {
   return {
     connectedAccounts: {
       solana: provider?.solana?.publicKey,
-      ethereum: provider?.ethereum?.selectedAddress,
+      // @ts-ignore:next-line
+      ethereum: provider?.web3?.provider?.selectedAddress,
+      // ethereum: provider?.ethereum?.selectedAddress,
     },
     connectedMethods,
     handleConnect,
@@ -658,12 +561,13 @@ const StatelessApp = React.memo((props: Props) => {
 
 const App = () => {
   // const props = useProps();
-  const [provider, setProvider] = useState<PhantomMultiChainProvider | null>(null);
+  const [provider, setProvider] = useState<PhantomMultiChainProviderWithWeb3 | null>(null);
   const props = useProps(provider);
 
   useEffect(() => {
     const getPhantomMultiChainProvider = async () => {
       const phantomMultiChainProvider = await detectPhantomMultiChainProvider();
+      console.log(phantomMultiChainProvider);
       if (phantomMultiChainProvider?.ethereum && phantomMultiChainProvider?.solana) {
         setProvider(phantomMultiChainProvider);
       }
