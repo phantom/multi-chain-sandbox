@@ -1,6 +1,5 @@
 import React from 'react';
 import styled from 'styled-components';
-import { PublicKey } from '@solana/web3.js';
 
 import { TLog } from '../../types';
 
@@ -49,7 +48,6 @@ const Row = styled.div`
 
 interface Props {
   connectedAccounts: ConnectedAccounts;
-  publicKey: PublicKey | null;
   logs: TLog[];
   clearLogs: () => void;
 }
@@ -59,7 +57,7 @@ interface Props {
 // =============================================================================
 
 const Logs = React.memo((props: Props) => {
-  const { connectedAccounts, publicKey, logs, clearLogs } = props;
+  const { connectedAccounts, logs, clearLogs } = props;
   const { ethereum, solana } = connectedAccounts;
   return (
     <StyledSection>

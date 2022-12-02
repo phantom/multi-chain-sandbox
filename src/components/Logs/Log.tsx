@@ -57,6 +57,7 @@ const Log = React.memo((props: TLog) => (
       <StyledSpan status={props.status}>
         {'>'} {props.status}
       </StyledSpan>
+      {props.providerType && <Method>{props.providerType}</Method>}
       {props.method && <Method>[{props.method}]</Method>}
     </Row>
     <Message>{props.message}</Message>

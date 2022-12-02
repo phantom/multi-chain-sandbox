@@ -3,6 +3,8 @@ import { providers } from 'ethers';
 
 type DisplayEncoding = 'utf8' | 'hex';
 
+type PhantomProviderType = 'solana' | 'ethereum';
+
 type PhantomEvent = 'connect' | 'disconnect' | 'accountChanged';
 
 type PhantomRequestMethod =
@@ -49,6 +51,7 @@ export type PhantomMultiChainProvider = {
 export type Status = 'success' | 'warning' | 'error' | 'info';
 
 export interface TLog {
+  providerType: PhantomProviderType;
   status: Status;
   method?: PhantomRequestMethod | Extract<PhantomEvent, 'accountChanged'>;
   message: string;

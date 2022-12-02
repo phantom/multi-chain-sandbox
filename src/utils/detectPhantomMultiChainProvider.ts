@@ -1,4 +1,6 @@
-const detectPhantomMultiChainProvider = async () => {
+import { PhantomMultiChainProvider } from '../types';
+
+const detectPhantomMultiChainProvider = async (): Promise<PhantomMultiChainProvider | null> => {
   const anyWindow: any = window;
   const timeout = 2000;
   let handled = false;

@@ -3,27 +3,27 @@
  * This will trigger a re-install of the dependencies in the sandbox – which should fix things right up.
  * Alternatively, you can fork this sandbox to refresh the dependencies manually.
  */
-import React, { useState, useEffect, useCallback, useMemo, useLayoutEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import styled from 'styled-components';
 import { clusterApiUrl, Connection, PublicKey } from '@solana/web3.js';
 
-import {
-  createAddressLookupTable,
-  createTransferTransaction,
-  createTransferTransactionV0,
-  extendAddressLookupTable,
-  getSolanaProvider,
-  getEthereumProvider,
-  pollSignatureStatus,
-  sendEVMTransaction,
-  signAllTransactions,
-  signAndSendTransaction,
-  signAndSendTransactionV0WithLookupTable,
-  signMessage,
-  signTransaction,
-} from './utils';
+// import {
+//   createAddressLookupTable,
+//   createTransferTransaction,
+//   createTransferTransactionV0,
+//   extendAddressLookupTable,
+//   getSolanaProvider,
+//   getEthereumProvider,
+//   pollSignatureStatus,
+//   sendEVMTransaction,
+//   signAllTransactions,
+//   signAndSendTransaction,
+//   signAndSendTransactionV0WithLookupTable,
+//   signMessage,
+//   signTransaction,
+// } from './utils';
 
-import { PhantomEthereumProvider, TLog } from './types';
+import { PhantomEthereumProvider, PhantomMultiChainProvider, TLog } from './types';
 
 import { Logs, Sidebar, NoProvider } from './components';
 import detectPhantomMultiChainProvider from './utils/detectPhantomMultiChainProvider';
@@ -48,11 +48,8 @@ const StyledApp = styled.div`
 
 const solanaNetwork = clusterApiUrl('devnet');
 const connection = new Connection(solanaNetwork);
-// const solanaProvider = getSolanaProvider();
-// const ethereumProvider = getEthereumProvider();
-const solanaProvider = {};
-const ethereumProvider = {};
-const provider = getPhantomMultiChainProvider();
+// let accounts = [];
+// const provider = getPhantomMultiChainProvider();
 const message = 'To avoid digital dognappers, sign below to authenticate with CryptoCorgis.';
 
 // =============================================================================
@@ -76,10 +73,8 @@ export type ConnectedMethods =
 
 interface Props {
   connectedAccounts: ConnectedAccounts;
-  publicKey: PublicKey | null;
   connectedMethods: ConnectedMethods[];
   handleConnect: () => Promise<void>;
-  ethereumProvider: PhantomEthereumProvider;
   logs: TLog[];
   clearLogs: () => void;
 }
@@ -92,7 +87,8 @@ interface Props {
  * @DEVELOPERS
  * The fun stuff!
  */
-const useProps = (): Props => {
+const useProps = (provider: PhantomMultiChainProvider | null): Props => {
+  // const useProps = (): Props => {
   const [logs, setLogs] = useState<TLog[]>([]);
 
   const createLog = useCallback(
@@ -106,16 +102,133 @@ const useProps = (): Props => {
     setLogs([]);
   }, [setLogs]);
 
-  // useEffect(() => {
-  //   if (!provider) return;
-  //   console.log(provider);
-  //   const { solana, ethereum } = provider;
+  useEffect(() => {
+    if (!provider) return;
+    const { solana, ethereum } = provider;
 
-  //   // attempt to eagerly connect
-  //   solana.connect({ onlyIfTrusted: true }).catch(() => {
-  //     // fail silently
-  //   });
-  // }, []);
+    // attempt to eagerly connect
+    solana.connect({ onlyIfTrusted: true }).catch(() => {
+      // fail silently
+    });
+
+    solana.on('connect', (publicKey: PublicKey) => {
+      createLog({
+        providerType: 'solana',
+        status: 'success',
+        method: 'connect',
+        message: `Connected to account ${publicKey.toBase58()}`,
+      });
+    });
+
+    ethereum.on('connect', (connectionInfo: { chainId: string }) => {
+      createLog({
+        providerType: 'ethereum',
+        status: 'success',
+        method: 'connect',
+        message: `Connected to chain ${connectionInfo.chainId}`,
+      });
+    });
+
+    solana.on('disconnect', () => {
+      createLog({
+        providerType: 'solana',
+        status: 'warning',
+        method: 'disconnect',
+        message: '👋 Goodbye',
+      });
+    });
+
+    ethereum.on('disconnect', () => {
+      createLog({
+        providerType: 'ethereum',
+        status: 'warning',
+        method: 'disconnect',
+        message: '⚠️ Lost connection to the RPC',
+      });
+    });
+
+    ethereum.on('accountsChanged', (newAccounts: String[]) => {
+      if (newAccounts.length > 0) {
+        createLog({
+          providerType: 'ethereum',
+          status: 'info',
+          method: 'accountChanged',
+          message: `Switched to account ${newAccounts[0]}`,
+        });
+        // accounts = newAccounts
+      } else {
+        /**
+         * In this case dApps could...
+         *
+         * 1. Not do anything
+         * 2. Always attempt to reconnect
+         */
+
+        createLog({
+          providerType: 'ethereum',
+          status: 'info',
+          method: 'accountChanged',
+          message: 'Attempting to switch accounts.',
+        });
+
+        ethereum.send('eth_requestAccounts', []).catch((error) => {
+          createLog({
+            providerType: 'ethereum',
+            status: 'error',
+            method: 'accountChanged',
+            message: `Failed to re-connect: ${error.message}`,
+          });
+        });
+      }
+    });
+
+    solana.on('accountChanged', (publicKey: PublicKey | null) => {
+      if (publicKey) {
+        createLog({
+          providerType: 'solana',
+          status: 'info',
+          method: 'accountChanged',
+          message: `Switched to account ${publicKey.toBase58()}`,
+        });
+      } else {
+        /**
+         * In this case dApps could...
+         *
+         * 1. Not do anything
+         * 2. Only re-connect to the new account if it is trusted
+         *
+         * ```
+         * solanaProvider.connect({ onlyIfTrusted: true }).catch((err) => {
+         *  // fail silently
+         * });
+         * ```
+         *
+         * 3. Always attempt to reconnect
+         */
+
+        createLog({
+          providerType: 'solana',
+          status: 'info',
+          method: 'accountChanged',
+          message: 'Attempting to switch accounts.',
+        });
+
+        solana.connect().catch((error) => {
+          createLog({
+            providerType: 'solana',
+            status: 'error',
+            method: 'accountChanged',
+            message: `Failed to re-connect: ${error.message}`,
+          });
+        });
+      }
+    });
+
+    return () => {
+      solana.disconnect();
+      ethereum.disconnect();
+    };
+  }, [provider, createLog]);
 
   // useEffect(() => {
   //   if (!solanaProvider || !ethereumProvider) return;
@@ -386,6 +499,7 @@ const useProps = (): Props => {
       await solana.connect();
     } catch (error) {
       createLog({
+        providerType: 'solana',
         status: 'error',
         method: 'connect',
         message: error.message,
@@ -418,23 +532,25 @@ const useProps = (): Props => {
     //     message: error.message,
     //   });
     // }
-  }, [createLog]);
+  }, [provider, createLog]);
 
   /** Disconnect */
   const handleDisconnect = useCallback(async () => {
     console.log('disconnect');
-    // if (!solanaProvider) return;
+    if (!provider) return;
+    const { solana } = provider;
 
-    // try {
-    //   await solanaProvider.disconnect();
-    // } catch (error) {
-    //   createLog({
-    //     status: 'error',
-    //     method: 'disconnect',
-    //     message: error.message,
-    //   });
-    // }
-  }, [createLog]);
+    try {
+      await solana.disconnect();
+    } catch (error) {
+      createLog({
+        providerType: 'solana',
+        status: 'error',
+        method: 'disconnect',
+        message: error.message,
+      });
+    }
+  }, [provider, createLog]);
 
   // const handleEthSendTransaction = useCallback(async () => {
   //   if (!ethereumProvider) return;
@@ -512,13 +628,11 @@ const useProps = (): Props => {
   return {
     connectedAccounts: {
       solana: provider?.solana?.publicKey,
-      ethereum: provider?.ethereum?.connectedAddress,
+      ethereum: provider?.ethereum?.selectedAddress,
     },
-    publicKey: null,
     connectedMethods,
     handleConnect,
     logs,
-    ethereumProvider,
     clearLogs,
   };
 };
@@ -528,17 +642,12 @@ const useProps = (): Props => {
 // =============================================================================
 
 const StatelessApp = React.memo((props: Props) => {
-  const { connectedAccounts, publicKey, connectedMethods, handleConnect, logs, clearLogs } = props;
+  const { connectedAccounts, connectedMethods, handleConnect, logs, clearLogs } = props;
 
   return (
     <StyledApp>
-      <Sidebar
-        connectedAccounts={connectedAccounts}
-        publicKey={publicKey}
-        connectedMethods={connectedMethods}
-        connect={handleConnect}
-      />
-      <Logs connectedAccounts={connectedAccounts} publicKey={publicKey} logs={logs} clearLogs={clearLogs} />
+      <Sidebar connectedAccounts={connectedAccounts} connectedMethods={connectedMethods} connect={handleConnect} />
+      <Logs connectedAccounts={connectedAccounts} logs={logs} clearLogs={clearLogs} />
     </StyledApp>
   );
 });
@@ -548,24 +657,27 @@ const StatelessApp = React.memo((props: Props) => {
 // =============================================================================
 
 const App = () => {
-  // const [phantomMultiChainProvider, setPhantomMultiChainProvider] = useState(null);
-  const props = useProps();
+  // const props = useProps();
+  const [provider, setProvider] = useState<PhantomMultiChainProvider | null>(null);
+  const props = useProps(provider);
 
-  // useEffect(() => {
-  //   const getPhantomMultiChainProvider = async () => {
-  //     const provider = await detectPhantomMultiChainProvider();
-  //     setPhantomMultiChainProvider(provider);
-  //   };
-  //   getPhantomMultiChainProvider();
-  // }, []);
-
-  // if (!phantomMultiChainProvider) {
-  //   return <NoProvider />;
-  // }
+  useEffect(() => {
+    const getPhantomMultiChainProvider = async () => {
+      const phantomMultiChainProvider = await detectPhantomMultiChainProvider();
+      if (phantomMultiChainProvider?.ethereum && phantomMultiChainProvider?.solana) {
+        setProvider(phantomMultiChainProvider);
+      }
+    };
+    getPhantomMultiChainProvider();
+  }, []);
 
   if (!provider) {
     return <NoProvider />;
   }
+
+  // if (!provider) {
+  //   return <NoProvider />;
+  // }
 
   return <StatelessApp {...props} />;
 };

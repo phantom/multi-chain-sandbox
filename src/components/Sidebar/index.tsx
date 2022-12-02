@@ -66,6 +66,13 @@ const Pre = styled.pre`
   margin-bottom: 5px;
 `;
 
+const AccountRow = styled.div`
+  display: flex;
+  :first-of-type {
+    margin-bottom: 8px;
+  }
+`;
+
 const Badge = styled.div`
   margin: 0;
   padding: 10px;
@@ -74,6 +81,7 @@ const Badge = styled.div`
   background-color: ${hexToRGB(PURPLE, 0.2)};
   font-size: 14px;
   border-radius: 6px;
+  margin-left: 6px;
   @media (max-width: 400px) {
     width: 280px;
     white-space: nowrap;
@@ -136,7 +144,6 @@ const Tag = styled.p`
 
 interface Props {
   connectedAccounts: ConnectedAccounts;
-  publicKey?: PublicKey;
   connectedMethods: ConnectedMethods[];
   connect: () => Promise<void>;
 }
@@ -146,8 +153,7 @@ interface Props {
 // =============================================================================
 [];
 const Sidebar = React.memo((props: Props) => {
-  const { connectedAccounts, publicKey, connectedMethods, connect } = props;
-  const { ethereum, solana } = connectedAccounts;
+  const { connectedAccounts, connectedMethods, connect } = props;
   return (
     <Main>
       <Body>
@@ -155,13 +161,29 @@ const Sidebar = React.memo((props: Props) => {
           <img src="https://phantom.app/img/phantom-logo.svg" alt="Phantom" width="200" />
           <Subtitle>CodeSandbox</Subtitle>
         </Link>
-        {solana && ethereum ? (
+        {connectedAccounts?.solana ? (
           // connected
           <>
             <div>
               <Pre>Connected as</Pre>
-              <Badge>{solana.toBase58()}</Badge>
-              <Badge>{ethereum}</Badge>
+              <AccountRow>
+                <img
+                  src="https://static.phantom.app/assets/solana.png"
+                  height={36}
+                  width={36}
+                  style={{ borderRadius: 6 }}
+                />
+                <Badge>{connectedAccounts?.solana?.toBase58()}</Badge>
+              </AccountRow>
+              <AccountRow>
+                <img
+                  src="https://static.phantom.app/assets/ethereum.png"
+                  height={36}
+                  width={36}
+                  style={{ borderRadius: 6 }}
+                />
+                <Badge>{connectedAccounts?.ethereum}</Badge>
+              </AccountRow>
               <Divider />
             </div>
             {connectedMethods.map((method, i) => (

@@ -24,6 +24,7 @@ const pollSignatureStatus = async (
     if (count === MAX_POLLS) {
       clearInterval(interval);
       createLog({
+        providerType: 'solana',
         status: 'error',
         method: 'signAndSendTransaction',
         message: `Transaction: ${signature}`,
@@ -39,6 +40,7 @@ const pollSignatureStatus = async (
       const hasReachedSufficientCommitment = confirmationStatus === 'confirmed' || confirmationStatus === 'finalized';
 
       createLog({
+        providerType: 'solana',
         status: hasReachedSufficientCommitment ? 'success' : 'info',
         method: 'signAndSendTransaction',
         message: `Transaction: ${signature}`,
@@ -51,6 +53,7 @@ const pollSignatureStatus = async (
       }
     } else {
       createLog({
+        providerType: 'solana',
         status: 'info',
         method: 'signAndSendTransaction',
         message: `Transaction: ${signature}`,
