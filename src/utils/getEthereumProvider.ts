@@ -11,8 +11,9 @@ const getEthereumProvider = (): PhantomEthereumProvider | undefined => {
     const anyWindow: any = window;
     const ethereum = anyWindow.phantom?.ethereum;
     if (ethereum.isPhantom) {
-      const provider = new providers.Web3Provider(ethereum);
-      return provider;
+      // const provider = new providers.Web3Provider(ethereum);
+      // return provider;
+      return ethereum;
     }
   }
 

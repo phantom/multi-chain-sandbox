@@ -6,7 +6,7 @@ import { utils } from 'ethers';
  * @param {Web3Provider} provider a web3 provider object
  * @returns {Promise<TransactionResponse>} a raw transaction object (hasn't been confirmed by network)
  */
-async function sendEVMTransaction(provider: Web3Provider): Promise<TransactionResponse> {
+async function sendTransactionOnEthereum(provider: Web3Provider): Promise<TransactionResponse> {
   try {
     const signer = provider.getSigner();
     const address = await signer.getAddress();
@@ -27,4 +27,4 @@ async function sendEVMTransaction(provider: Web3Provider): Promise<TransactionRe
   }
 }
 
-export default sendEVMTransaction;
+export default sendTransactionOnEthereum;

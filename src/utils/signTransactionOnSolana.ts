@@ -8,7 +8,7 @@ import { PhantomSolanaProvider } from '../types';
  * @param   {Transaction | VersionedTransaction}     transaction a transaction to sign
  * @returns {Transaction | VersionedTransaction}                 a signed transaction
  */
-const signTransaction = async (
+const signTransactionOnSolana = async (
   provider: PhantomSolanaProvider,
   transaction: Transaction | VersionedTransaction
 ): Promise<Transaction | VersionedTransaction> => {
@@ -21,4 +21,4 @@ const signTransaction = async (
   }
 };
 
-export default signTransaction;
+export default signTransactionOnSolana;

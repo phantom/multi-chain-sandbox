@@ -1,7 +1,7 @@
 import { Connection, PublicKey, SystemProgram, TransactionMessage, VersionedTransaction } from '@solana/web3.js';
 
 import { PhantomSolanaProvider } from '../types';
-import { createAddressLookupTable, extendAddressLookupTable, signAndSendTransaction } from '.';
+import { createAddressLookupTable, extendAddressLookupTable, signAndSendTransactionOnSolana } from '.';
 import { Logs } from '../components';
 
 /**
@@ -63,7 +63,7 @@ const signAndSendTransactionV0WithLookupTable = async (
 
   // make a versioned transaction
   const transactionV0 = new VersionedTransaction(messageV0);
-  const signature = await signAndSendTransaction(provider, transactionV0);
+  const signature = await signAndSendTransactionOnSolana(provider, transactionV0);
   return signature;
 };
 

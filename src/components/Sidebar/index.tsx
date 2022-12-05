@@ -1,5 +1,4 @@
 import React from 'react';
-import { PublicKey } from '@solana/web3.js';
 import styled from 'styled-components';
 
 import { GRAY, REACT_GRAY, PURPLE, WHITE, DARK_GRAY } from '../../constants';
@@ -8,6 +7,8 @@ import { hexToRGB } from '../../utils';
 
 import Button from '../Button';
 import { ConnectedAccounts, ConnectedMethods } from '../../App';
+import { SupportedChainIcons, SupportedEVMChainIds } from '../../types';
+import getChainName from '../../utils/getChainName';
 
 // =============================================================================
 // Styled Components
@@ -81,7 +82,6 @@ const Badge = styled.div`
   background-color: ${hexToRGB(PURPLE, 0.2)};
   font-size: 14px;
   border-radius: 6px;
-  margin-left: 6px;
   @media (max-width: 400px) {
     width: 280px;
     white-space: nowrap;
@@ -138,13 +138,21 @@ const Tag = styled.p`
   }
 `;
 
+const ChainIcon = styled.img`
+  height: ${(props) => props.height};
+  width: ${(props) => props.height};
+  border-radius: ${(props) => props.height};
+  margin-right: 6px;
+`;
+
 // =============================================================================
 // Typedefs
 // =============================================================================
 
 interface Props {
-  connectedAccounts: ConnectedAccounts;
   connectedMethods: ConnectedMethods[];
+  connectedEthereumChainId: SupportedEVMChainIds | null;
+  connectedAccounts: ConnectedAccounts;
   connect: () => Promise<void>;
 }
 
@@ -153,13 +161,13 @@ interface Props {
 // =============================================================================
 [];
 const Sidebar = React.memo((props: Props) => {
-  const { connectedAccounts, connectedMethods, connect } = props;
+  const { connectedAccounts, connectedEthereumChainId, connectedMethods, connect } = props;
   return (
     <Main>
       <Body>
         <Link>
           <img src="https://phantom.app/img/phantom-logo.svg" alt="Phantom" width="200" />
-          <Subtitle>CodeSandbox</Subtitle>
+          <Subtitle>Multi-chain Sandbox</Subtitle>
         </Link>
         {connectedAccounts?.solana ? (
           // connected
@@ -167,30 +175,27 @@ const Sidebar = React.memo((props: Props) => {
             <div>
               <Pre>Connected as</Pre>
               <AccountRow>
-                <img
-                  src="https://static.phantom.app/assets/solana.png"
-                  height={36}
-                  width={36}
-                  style={{ borderRadius: 6 }}
-                />
+                <ChainIcon src={SupportedChainIcons.Solana} height="36px" />
                 <Badge>{connectedAccounts?.solana?.toBase58()}</Badge>
               </AccountRow>
               <AccountRow>
-                <img
-                  src="https://static.phantom.app/assets/ethereum.png"
-                  height={36}
-                  width={36}
-                  style={{ borderRadius: 6 }}
-                />
+                <ChainIcon src={SupportedChainIcons.Ethereum} height="36px" />
                 <Badge>{connectedAccounts?.ethereum}</Badge>
               </AccountRow>
+              <p>Current Chain: {connectedEthereumChainId}</p>
               <Divider />
             </div>
             {connectedMethods.map((method, i) => (
               <Button key={`${method.name}-${i}`} onClick={method.onClick}>
-                {method.name}
+                <ChainIcon src={SupportedChainIcons[method.chain]} height="16px" />
+                <span>{method.name}</span>
               </Button>
             ))}
+            <select>
+              {Object.keys(SupportedEVMChainIds).map((key, i) => (
+                <option key={`${SupportedEVMChainIds[key]}-${i}`}>{getChainName(SupportedEVMChainIds[key])}</option>
+              ))}
+            </select>
           </>
         ) : (
           // not connected

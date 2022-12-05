@@ -58,7 +58,7 @@ interface Props {
 
 const Logs = React.memo((props: Props) => {
   const { connectedAccounts, logs, clearLogs } = props;
-  const { ethereum, solana } = connectedAccounts;
+  const { solana } = connectedAccounts;
   return (
     <StyledSection>
       {logs.length > 0 ? (
@@ -72,7 +72,7 @@ const Logs = React.memo((props: Props) => {
         <Row>
           <span>{'>'}</span>
           <PlaceholderMessage>
-            {ethereum && solana ? (
+            {solana ? (
               // connected
               <>
                 Click a button and watch magic happen...{' '}

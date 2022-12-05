@@ -9,7 +9,7 @@ import { PhantomSolanaProvider } from '../types';
  * @param   {Transaction | VersionedTransaction}     transaction2 a transaction to sign
  * @returns {(Transaction | VersionedTransaction)[]}                an array of signed transactions
  */
-const signAllTransactions = async (
+const signAllTransactionsOnSolana = async (
   provider: PhantomSolanaProvider,
   transaction1: Transaction | VersionedTransaction,
   transaction2: Transaction | VersionedTransaction
@@ -23,4 +23,4 @@ const signAllTransactions = async (
   }
 };
 
-export default signAllTransactions;
+export default signAllTransactionsOnSolana;

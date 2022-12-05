@@ -16,20 +16,32 @@ import {
   //   getEthereumProvider,
   pollSolanaSignatureStatus,
   //   sendEVMTransaction,
-  //   signAllTransactions,
-  signAndSendTransaction,
+  signAllTransactionsOnSolana,
+  sendTransactionOnEthereum,
+  signAndSendTransactionOnSolana,
+  signTransactionOnSolana,
+  signMessageOnEthereum,
   signMessageOnSolana,
   //   signAndSendTransactionV0WithLookupTable,
   //   signMessage,
   //   signTransaction,
 } from './utils';
 
-import { PhantomEthereumProvider, PhantomMultiChainProvider, PhantomMultiChainProviderWithWeb3, TLog } from './types';
+import {
+  PhantomEthereumProvider,
+  PhantomInjectedProvider,
+  SupportedChainNames,
+  SupportedEVMChainIds,
+  SupportedSolanaChainIds,
+  TLog,
+} from './types';
 
 import { Logs, Sidebar, NoProvider } from './components';
 import detectPhantomMultiChainProvider from './utils/detectPhantomMultiChainProvider';
 import getPhantomMultiChainProvider from './utils/getPhantomMultiChainProvider';
-import signMessageOnEthereum from './utils/signMessageOnEthereum';
+import { SUPPORTED_CHAINS, SUPPORTED_ETHEREUM_CHAIN_IDS } from './constants';
+import getChainName from './utils/getChainName';
+import switchEthereumChain from './utils/switchEthereumChain';
 
 // =============================================================================
 // Styled Components
@@ -50,8 +62,6 @@ const StyledApp = styled.div`
 
 const solanaNetwork = clusterApiUrl('devnet');
 const connection = new Connection(solanaNetwork);
-// let accounts = [];
-// const provider = getPhantomMultiChainProvider();
 const message = 'To avoid digital dognappers, sign below to authenticate with CryptoCorgis.';
 
 // =============================================================================
@@ -65,16 +75,19 @@ export type ConnectedAccounts = {
 
 export type ConnectedMethods =
   | {
+      chain: SupportedChainNames;
       name: string;
       onClick: () => Promise<string>;
     }
   | {
+      chain: SupportedChainNames;
       name: string;
       onClick: () => Promise<void>;
     };
 
 interface Props {
   connectedAccounts: ConnectedAccounts;
+  connectedEthereumChainId: SupportedEVMChainIds | null;
   connectedMethods: ConnectedMethods[];
   handleConnect: () => Promise<void>;
   logs: TLog[];
@@ -89,8 +102,7 @@ interface Props {
  * @DEVELOPERS
  * The fun stuff!
  */
-const useProps = (provider: PhantomMultiChainProviderWithWeb3 | null): Props => {
-  // const useProps = (): Props => {
+const useProps = (provider: PhantomInjectedProvider | null): Props => {
   const [logs, setLogs] = useState<TLog[]>([]);
 
   const createLog = useCallback(
@@ -106,7 +118,7 @@ const useProps = (provider: PhantomMultiChainProviderWithWeb3 | null): Props => 
 
   useEffect(() => {
     if (!provider) return;
-    const { solana, ethereum, web3 } = provider;
+    const { solana, ethereum } = provider;
 
     // attempt to eagerly connect
     solana.connect({ onlyIfTrusted: true }).catch(() => {
@@ -122,12 +134,12 @@ const useProps = (provider: PhantomMultiChainProviderWithWeb3 | null): Props => 
       });
     });
 
-    ethereum.on('connect', (connectionInfo: { chainId: string }) => {
+    ethereum.on('connect', (connectionInfo: { chainId: SupportedEVMChainIds }) => {
       createLog({
         providerType: 'ethereum',
         status: 'success',
         method: 'connect',
-        message: `Connected to chain ${connectionInfo.chainId}`,
+        message: `Connected to ${getChainName(connectionInfo.chainId)} (Chain ID: ${connectionInfo.chainId})`,
       });
     });
 
@@ -173,7 +185,7 @@ const useProps = (provider: PhantomMultiChainProviderWithWeb3 | null): Props => 
           message: 'Attempting to switch accounts.',
         });
 
-        web3.send('eth_requestAccounts', []).catch((error) => {
+        ethereum.request({ method: 'eth_requestAccounts' }).catch((error) => {
           createLog({
             providerType: 'ethereum',
             status: 'error',
@@ -224,6 +236,25 @@ const useProps = (provider: PhantomMultiChainProviderWithWeb3 | null): Props => 
           });
         });
       }
+
+      ethereum.on('chainChanged', (chainId: SupportedEVMChainIds) => {
+        console.log('HELLO');
+        createLog({
+          providerType: 'ethereum',
+          status: 'info',
+          method: 'connect', //TODO: Change method
+          message: `Switched to chain ${chainId}`,
+        });
+
+        ethereum.request({ method: 'eth_requestAccounts' }).catch((error) => {
+          createLog({
+            providerType: 'ethereum',
+            status: 'error',
+            method: 'accountChanged',
+            message: `Failed to re-connect: ${error.message}`,
+          });
+        });
+      });
     });
 
     return () => {
@@ -234,7 +265,7 @@ const useProps = (provider: PhantomMultiChainProviderWithWeb3 | null): Props => 
   /** Connect */
   const handleConnect = useCallback(async () => {
     if (!provider) return;
-    const { solana, ethereum, web3 } = provider;
+    const { solana, ethereum } = provider;
 
     try {
       await solana.connect();
@@ -248,7 +279,7 @@ const useProps = (provider: PhantomMultiChainProviderWithWeb3 | null): Props => 
     }
 
     try {
-      const accounts = await web3.send('eth_requestAccounts', []);
+      const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
       createLog({
         providerType: 'ethereum',
         status: 'success',
@@ -263,42 +294,6 @@ const useProps = (provider: PhantomMultiChainProviderWithWeb3 | null): Props => 
         message: error.message,
       });
     }
-
-    // const signer = web3.getSigner();
-    // console.log('signer', signer);
-    // const signedMessage = await signer.signMessage(message);
-    // console.log(signedMessage);
-
-    if (!ethereum.selectedAddress) {
-      console.log('Not connected on ethereum');
-    }
-
-    // if (!solanaProvider) return;
-
-    // try {
-    //   await solanaProvider.connect();
-    // } catch (error) {
-    //   createLog({
-    //     status: 'error',
-    //     method: 'connect',
-    //     message: error.message,
-    //   });
-    // }
-
-    // try {
-    //   const accounts = await ethereumProvider.send('eth_requestAccounts', []);
-    //   createLog({
-    //     status: 'success',
-    //     method: 'connect',
-    //     message: `connected to EVM account ${accounts[0]}`,
-    //   });
-    // } catch (error) {
-    //   createLog({
-    //     status: 'error',
-    //     method: 'connect',
-    //     message: error.message,
-    //   });
-    // }
   }, [provider, createLog]);
 
   // /** SignAndSendTransactionV0 */
@@ -310,81 +305,150 @@ const useProps = (provider: PhantomMultiChainProviderWithWeb3 | null): Props => 
       createLog({
         providerType: 'solana',
         status: 'info',
-        method: 'signAndSendTransactionV0',
-        message: `Requesting signature for: ${JSON.stringify(transactionV0)}`,
+        method: 'signAndSendTransaction',
+        message: `Requesting signature for ${JSON.stringify(transactionV0)}`,
       });
-      const signature = await signAndSendTransaction(solana, transactionV0);
+      const signature = await signAndSendTransactionOnSolana(solana, transactionV0);
       createLog({
         providerType: 'solana',
         status: 'info',
-        method: 'signAndSendTransactionV0',
-        message: `Signed and submitted transactionV0 ${signature}.`,
+        method: 'signAndSendTransaction',
+        message: `Signed and submitted transaction ${signature}.`,
       });
       pollSolanaSignatureStatus(signature, connection, createLog);
     } catch (error) {
       createLog({
         providerType: 'solana',
         status: 'error',
-        method: 'signAndSendTransactionV0',
+        method: 'signAndSendTransaction',
         message: error.message,
       });
     }
   }, [provider, createLog]);
 
-  // /** SignTransaction */
-  // const handleSolanaSignTransaction = useCallback(async () => {
+  const handleSendTransactionOnEthereum = useCallback(async () => {
+    if (!provider) return;
+    const { ethereum } = provider;
+
+    try {
+      // send the transaction up to the network
+      const transaction = await sendTransactionOnEthereum(ethereum);
+      createLog({
+        providerType: 'ethereum',
+        status: 'info',
+        method: 'eth_sendTransaction',
+        message: `Sending transaction ${JSON.stringify(transaction)}`,
+      });
+    } catch (error) {
+      createLog({
+        providerType: 'ethereum',
+        status: 'error',
+        method: 'eth_sendTransaction',
+        message: error.message,
+      });
+    }
+  }, [provider, createLog]);
+  // const handleSendTransactionOnEthereum = useCallback(async () => {
   //   if (!provider) return;
-  //   const { solana } = provider;
+  //   const { web3 } = provider;
+
   //   try {
-  //     const transaction = await createTransferTransaction(solanaProvider.publicKey, connection);
+  //     // send the transaction up to the network
+  //     const transaction = await sendTransactionOnEthereum(web3);
   //     createLog({
+  //       providerType: 'ethereum',
   //       status: 'info',
-  //       method: 'signTransaction',
-  //       message: `Requesting signature for: ${JSON.stringify(transaction)}`,
+  //       method: 'eth_sendTransaction',
+  //       message: `Sending transaction ${JSON.stringify(transaction)}`,
   //     });
-  //     const signedTransaction = await signTransaction(solanaProvider, transaction);
-  //     createLog({
-  //       status: 'success',
-  //       method: 'signTransaction',
-  //       message: `Transaction signed: ${JSON.stringify(signedTransaction)}`,
-  //     });
+  //     try {
+  //       // wait for the transaction to be included in the next block
+  //       const txReceipt = await transaction.wait(1); // 1 is number of blocks to be confirmed before returning the receipt
+  //       createLog({
+  //         providerType: 'ethereum',
+  //         status: 'success',
+  //         method: 'eth_sendTransaction',
+  //         message: `TX included ${JSON.stringify(txReceipt)}`,
+  //       });
+  //     } catch (error) {
+  //       // log out if the tx didn't get included for some reason
+  //       createLog({
+  //         providerType: 'ethereum',
+  //         status: 'error',
+  //         method: 'eth_sendTransaction',
+  //         message: `Failed to include transaction on the chain: ${error.message}`,
+  //       });
+  //     }
   //   } catch (error) {
   //     createLog({
+  //       providerType: 'ethereum',
   //       status: 'error',
-  //       method: 'signTransaction',
+  //       method: 'eth_sendTransaction',
   //       message: error.message,
   //     });
   //   }
-  // }, [createLog]);
+  // }, [provider, createLog]);
+
+  /** SignTransaction */
+  const handleSignTransactionOnSolana = useCallback(async () => {
+    if (!provider) return;
+    const { solana } = provider;
+    try {
+      const transaction = await createTransferTransactionV0(solana.publicKey, connection);
+      createLog({
+        providerType: 'solana',
+        status: 'info',
+        method: 'signTransaction',
+        message: `Requesting signature for: ${JSON.stringify(transaction)}`,
+      });
+      const signedTransaction = await signTransactionOnSolana(solana, transaction);
+      createLog({
+        providerType: 'solana',
+        status: 'success',
+        method: 'signTransaction',
+        message: `Transaction signed: ${JSON.stringify(signedTransaction)}`,
+      });
+    } catch (error) {
+      createLog({
+        providerType: 'solana',
+        status: 'error',
+        method: 'signTransaction',
+        message: error.message,
+      });
+    }
+  }, [provider, createLog]);
 
   // /** SignAllTransactions */
-  // const handleSignAllTransactions = useCallback(async () => {
-  //   if (!solanaProvider) return;
-
-  //   try {
-  //     const transactions = [
-  //       await createTransferTransaction(solanaProvider.publicKey, connection),
-  //       await createTransferTransaction(solanaProvider.publicKey, connection),
-  //     ];
-  //     createLog({
-  //       status: 'info',
-  //       method: 'signAllTransactions',
-  //       message: `Requesting signature for: ${JSON.stringify(transactions)}`,
-  //     });
-  //     const signedTransactions = await signAllTransactions(solanaProvider, transactions[0], transactions[1]);
-  //     createLog({
-  //       status: 'success',
-  //       method: 'signAllTransactions',
-  //       message: `Transactions signed: ${JSON.stringify(signedTransactions)}`,
-  //     });
-  //   } catch (error) {
-  //     createLog({
-  //       status: 'error',
-  //       method: 'signAllTransactions',
-  //       message: error.message,
-  //     });
-  //   }
-  // }, [createLog]);
+  const handleSignAllTransactionsOnSolana = useCallback(async () => {
+    if (!provider) return;
+    const { solana } = provider;
+    try {
+      const transactions = [
+        await createTransferTransactionV0(solana.publicKey, connection),
+        await createTransferTransactionV0(solana.publicKey, connection),
+      ];
+      createLog({
+        providerType: 'solana',
+        status: 'info',
+        method: 'signAllTransactions',
+        message: `Requesting signature for: ${JSON.stringify(transactions)}`,
+      });
+      const signedTransactions = await signAllTransactionsOnSolana(solana, transactions[0], transactions[1]);
+      createLog({
+        providerType: 'solana',
+        status: 'success',
+        method: 'signAllTransactions',
+        message: `Transactions signed: ${JSON.stringify(signedTransactions)}`,
+      });
+    } catch (error) {
+      createLog({
+        providerType: 'solana',
+        status: 'error',
+        method: 'signAllTransactions',
+        message: error.message,
+      });
+    }
+  }, [provider, createLog]);
 
   // /** SignMessage */
   const handleSignMessageOnSolana = useCallback(async () => {
@@ -412,9 +476,10 @@ const useProps = (provider: PhantomMultiChainProviderWithWeb3 | null): Props => 
   // /** SignMessage */
   const handleSignMessageOnEthereum = useCallback(async () => {
     if (!provider) return;
-    const { web3 } = provider;
+    const { ethereum } = provider;
     try {
-      const signedMessage = await signMessageOnEthereum(web3, message);
+      // const signedMessage = await signMessageOnEthereum(web3, message);
+      const signedMessage = await signMessageOnEthereum(ethereum, message, ethereum.selectedAddress);
       createLog({
         providerType: 'ethereum',
         status: 'success',
@@ -427,6 +492,28 @@ const useProps = (provider: PhantomMultiChainProviderWithWeb3 | null): Props => 
         providerType: 'ethereum',
         status: 'error',
         method: 'signMessage',
+        message: error.message,
+      });
+    }
+  }, [provider, createLog]);
+
+  /** Re-connect */
+  const handleReconnect = useCallback(async () => {
+    if (!provider) return;
+    const { ethereum } = provider;
+    try {
+      const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+      createLog({
+        providerType: 'ethereum',
+        status: 'success',
+        method: 'connect',
+        message: `Connected to account ${accounts[0]}`,
+      });
+    } catch (error) {
+      createLog({
+        providerType: 'ethereum',
+        status: 'error',
+        method: 'connect',
         message: error.message,
       });
     }
@@ -449,90 +536,102 @@ const useProps = (provider: PhantomMultiChainProviderWithWeb3 | null): Props => 
     }
   }, [provider, createLog]);
 
-  // const handleEthSendTransaction = useCallback(async () => {
-  //   if (!ethereumProvider) return;
-
-  //   try {
-  //     // send the transaction up to the network
-  //     const transaction = await sendEVMTransaction(ethereumProvider);
-  //     createLog({
-  //       status: 'info',
-  //       method: 'eth_sendTransaction',
-  //       message: `Sending transaction: ${JSON.stringify(transaction)}`,
-  //     });
-  //     try {
-  //       // wait for the transaction to be included in the next block
-  //       const txReceipt = await transaction.wait(1); // 1 is number of blocks to be confirmed before returning the receipt
-  //       createLog({
-  //         status: 'success',
-  //         method: 'eth_sendTransaction',
-  //         message: `TX included: ${JSON.stringify(txReceipt)}`,
-  //       });
-  //     } catch (error) {
-  //       // log out if the tx didn't get included for some reason
-  //       createLog({
-  //         status: 'error',
-  //         method: 'eth_sendTransaction',
-  //         message: `Failed to include transaction on the chain: ${error.message}`,
-  //       });
-  //     }
-  //   } catch (error) {
-  //     createLog({
-  //       status: 'error',
-  //       method: 'eth_sendTransaction',
-  //       message: error.message,
-  //     });
-  //   }
-  // }, [ethereumProvider, createLog]);
+  /** Switch Ethereum Chains */
+  const handleSwitchEthereumChains = useCallback(async () => {
+    console.log('switch ethereum chains');
+    if (!provider) return;
+    // const chainId = await provider.request({
+    //   method: "eth_chainId"
+    // });
+    const { ethereum } = provider;
+    const chainId =
+      ethereum.chainId === SupportedEVMChainIds.EthereumMainnet
+        ? SupportedEVMChainIds.EthereumGoerli
+        : SupportedEVMChainIds.EthereumMainnet;
+    console.log(`Currently on ${ethereum.chainId}, switching to chain ${chainId}`);
+    try {
+      await switchEthereumChain(ethereum, chainId);
+      createLog({
+        providerType: 'ethereum',
+        status: 'success',
+        method: 'wallet_switchEthereumChain',
+        message: `Switched to ${getChainName(ethereum.chainId)} (Chain ID: ${ethereum.chainId})`,
+      });
+    } catch (error) {
+      createLog({
+        providerType: 'ethereum',
+        status: 'error',
+        method: 'disconnect', //TODO: Update method
+        message: error.message,
+      });
+    }
+  }, [provider, createLog]);
 
   const connectedMethods = useMemo(() => {
     return [
       {
-        name: '[Solana] Sign and Send Transaction',
+        chain: SupportedChainNames.SolanaMainnet,
+        name: 'Sign and Send Transaction',
         onClick: handleSignAndSendTransactionOnSolana,
       },
-      // {
-      //   name: '[EVM] Sign and Send Transaction',
-      //   onClick: handleEthSendTransaction,
-      // },
-      // {
-      //   name: 'Sign Transaction',
-      //   onClick: handleSignTransaction,
-      // },
-      // {
-      //   name: 'Sign All Transactions',
-      //   onClick: handleSignAllTransactions,
-      // },
       {
-        name: '[Solana] Sign Message',
+        chain: SupportedChainNames.EthereumMainnet,
+        name: 'Send Transaction',
+        onClick: handleSendTransactionOnEthereum,
+      },
+      {
+        chain: SupportedChainNames.SolanaMainnet,
+        name: 'Sign Transaction',
+        onClick: handleSignTransactionOnSolana,
+      },
+      {
+        chain: SupportedChainNames.SolanaMainnet,
+        name: 'Sign All Transactions',
+        onClick: handleSignAllTransactionsOnSolana,
+      },
+      {
+        chain: SupportedChainNames.SolanaMainnet,
+        name: 'Sign Message',
         onClick: handleSignMessageOnSolana,
       },
       {
-        name: '[EVM] Sign Message',
+        chain: SupportedChainNames.EthereumMainnet,
+        name: 'Sign Message',
         onClick: handleSignMessageOnEthereum,
       },
       {
+        chain: SupportedChainNames.EthereumMainnet,
+        name: 'Reconnect',
+        onClick: handleReconnect,
+      },
+      {
+        chain: SupportedChainNames.EthereumMainnet,
+        name: 'Switch Chains',
+        onClick: handleSwitchEthereumChains,
+      },
+      {
+        chain: SupportedChainNames.SolanaMainnet,
         name: 'Disconnect',
         onClick: handleDisconnect,
       },
     ];
   }, [
-    // handleSignAndSendTransaction,
-    // handleSignAndSendTransactionV0,
-    // handleSignAndSendTransactionV0WithLookupTable,
-    // handleSignTransaction,
-    // handleSignAllTransactions,
-    // handleSignMessage,
+    handleSignAndSendTransactionOnSolana,
+    handleSendTransactionOnEthereum,
+    handleSignMessageOnSolana,
+    handleSignMessageOnEthereum,
+    handleSignTransactionOnSolana,
+    handleSignAllTransactionsOnSolana,
+    handleReconnect,
     handleDisconnect,
   ]);
 
   return {
     connectedAccounts: {
       solana: provider?.solana?.publicKey,
-      // @ts-ignore:next-line
-      ethereum: provider?.web3?.provider?.selectedAddress,
-      // ethereum: provider?.ethereum?.selectedAddress,
+      ethereum: provider?.ethereum?.selectedAddress,
     },
+    connectedEthereumChainId: provider?.ethereum?.chainId,
     connectedMethods,
     handleConnect,
     logs,
@@ -545,11 +644,16 @@ const useProps = (provider: PhantomMultiChainProviderWithWeb3 | null): Props => 
 // =============================================================================
 
 const StatelessApp = React.memo((props: Props) => {
-  const { connectedAccounts, connectedMethods, handleConnect, logs, clearLogs } = props;
+  const { connectedAccounts, connectedEthereumChainId, connectedMethods, handleConnect, logs, clearLogs } = props;
 
   return (
     <StyledApp>
-      <Sidebar connectedAccounts={connectedAccounts} connectedMethods={connectedMethods} connect={handleConnect} />
+      <Sidebar
+        connectedAccounts={connectedAccounts}
+        connectedEthereumChainId={connectedEthereumChainId}
+        connectedMethods={connectedMethods}
+        connect={handleConnect}
+      />
       <Logs connectedAccounts={connectedAccounts} logs={logs} clearLogs={clearLogs} />
     </StyledApp>
   );
@@ -560,17 +664,13 @@ const StatelessApp = React.memo((props: Props) => {
 // =============================================================================
 
 const App = () => {
-  // const props = useProps();
-  const [provider, setProvider] = useState<PhantomMultiChainProviderWithWeb3 | null>(null);
+  const [provider, setProvider] = useState<PhantomInjectedProvider | null>(null);
   const props = useProps(provider);
 
   useEffect(() => {
     const getPhantomMultiChainProvider = async () => {
       const phantomMultiChainProvider = await detectPhantomMultiChainProvider();
-      console.log(phantomMultiChainProvider);
-      if (phantomMultiChainProvider?.ethereum && phantomMultiChainProvider?.solana) {
-        setProvider(phantomMultiChainProvider);
-      }
+      setProvider(phantomMultiChainProvider);
     };
     getPhantomMultiChainProvider();
   }, []);
@@ -578,10 +678,6 @@ const App = () => {
   if (!provider) {
     return <NoProvider />;
   }
-
-  // if (!provider) {
-  //   return <NoProvider />;
-  // }
 
   return <StatelessApp {...props} />;
 };

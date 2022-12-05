@@ -8,7 +8,7 @@ import {
 } from '@solana/web3.js';
 
 import { PhantomSolanaProvider } from '../types';
-import { signAndSendTransaction } from '.';
+import { signAndSendTransactionOnSolana } from '.';
 
 /**
  * 1. Extends (add addresses) the table
@@ -48,7 +48,7 @@ const extendAddressLookupTable = async (
   }).compileToV0Message();
 
   const extensionTransactionV0 = new VersionedTransaction(extensionMessageV0);
-  const extensionSignature = await signAndSendTransaction(provider, extensionTransactionV0);
+  const extensionSignature = await signAndSendTransactionOnSolana(provider, extensionTransactionV0);
 
   // Confirm transaction: we will have to wait for the transaction to fetch the
   // lookup table account before proceeding: takes around 3-5 seconds to fetch.

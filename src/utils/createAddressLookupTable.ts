@@ -7,7 +7,7 @@ import {
 } from '@solana/web3.js';
 
 import { PhantomSolanaProvider } from '../types';
-import { signAndSendTransaction } from '.';
+import { signAndSendTransactionOnSolana } from '.';
 
 /**
  * 1. Creates an Address Lookup Table Instruction
@@ -46,7 +46,7 @@ const createAddressLookupTable = async (
   }).compileToV0Message();
 
   const lookupTransaction = new VersionedTransaction(lookupMessage);
-  const lookupSignature = await signAndSendTransaction(provider, lookupTransaction);
+  const lookupSignature = await signAndSendTransactionOnSolana(provider, lookupTransaction);
   console.log('Sent transaction for lookup table:', lookupSignature);
 
   return [lookupSignature, lookupTableAddress];

@@ -1,10 +1,10 @@
-import { PhantomMultiChainProvider } from '../types';
+import { PhantomInjectedProvider } from '../types';
 
 /**
  * Retrieves the Phantom's Solana and Ethereum providers from the window object
- * @returns {PhantomMultiChainProvider | undefined} a Phantom provider if one exists in the window
+ * @returns {PhantomInjectedProvider | undefined} a Phantom provider if one exists in the window
  */
-const getPhantomMultiChainProvider = (): PhantomMultiChainProvider | undefined => {
+const getPhantomMultiChainProvider = (): PhantomInjectedProvider | undefined => {
   if ('phantom' in window) {
     const anyWindow: any = window;
     const provider = anyWindow.phantom;

@@ -1,15 +1,14 @@
 import { Web3Provider } from '@ethersproject/providers';
 
 /**
- * Signs a message
- * @param   {Web3Provider} provider a Phantom Provider
- * @param   {String}          message  a message to sign
- * @returns {Any}                      TODO(get type)
+ * TODO
  */
-const signMessageOnEthereum = async (provider: Web3Provider, message: string): Promise<string> => {
+const signMessageOnEthereum = async (provider: any, message: string, account: string): Promise<string> => {
   try {
-    const signer = provider.getSigner();
-    const signedMessage = await signer.signMessage(message);
+    const signedMessage = await provider.request({
+      method: 'personal_sign',
+      params: [message, account],
+    });
     return signedMessage;
   } catch (error) {
     console.warn(error);
