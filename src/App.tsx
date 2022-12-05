@@ -32,7 +32,7 @@ import {
   PhantomInjectedProvider,
   SupportedChainNames,
   SupportedEVMChainIds,
-  SupportedSolanaChainIds,
+  PhantomProviderType,
   TLog,
 } from './types';
 
@@ -75,12 +75,12 @@ export type ConnectedAccounts = {
 
 export type ConnectedMethods =
   | {
-      chain: SupportedChainNames;
+      chain: string;
       name: string;
       onClick: () => Promise<string>;
     }
   | {
-      chain: SupportedChainNames;
+      chain: string;
       name: string;
       onClick: () => Promise<void>;
     };
@@ -166,7 +166,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
         createLog({
           providerType: 'ethereum',
           status: 'info',
-          method: 'accountChanged',
+          method: 'accountsChanged',
           message: `Switched to account ${newAccounts[0]}`,
         });
         // accounts = newAccounts
@@ -181,7 +181,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
         createLog({
           providerType: 'ethereum',
           status: 'info',
-          method: 'accountChanged',
+          method: 'eth_requestAccounts',
           message: 'Attempting to switch accounts.',
         });
 
@@ -189,7 +189,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
           createLog({
             providerType: 'ethereum',
             status: 'error',
-            method: 'accountChanged',
+            method: 'eth_requestAccounts',
             message: `Failed to re-connect: ${error.message}`,
           });
         });
@@ -242,7 +242,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
         createLog({
           providerType: 'ethereum',
           status: 'info',
-          method: 'connect', //TODO: Change method
+          method: 'chainChanged',
           message: `Switched to chain ${chainId}`,
         });
 
@@ -250,7 +250,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
           createLog({
             providerType: 'ethereum',
             status: 'error',
-            method: 'accountChanged',
+            method: 'eth_requestAccounts',
             message: `Failed to re-connect: ${error.message}`,
           });
         });
@@ -283,14 +283,14 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
       createLog({
         providerType: 'ethereum',
         status: 'success',
-        method: 'connect',
+        method: 'eth_requestAccounts',
         message: `Connected to account ${accounts[0]}`,
       });
     } catch (error) {
       createLog({
         providerType: 'ethereum',
         status: 'error',
-        method: 'connect',
+        method: 'eth_requestAccounts',
         message: error.message,
       });
     }
@@ -478,12 +478,11 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
     if (!provider) return;
     const { ethereum } = provider;
     try {
-      // const signedMessage = await signMessageOnEthereum(web3, message);
       const signedMessage = await signMessageOnEthereum(ethereum, message, ethereum.selectedAddress);
       createLog({
         providerType: 'ethereum',
         status: 'success',
-        method: 'signMessage',
+        method: 'personal_sign',
         message: `Message signed: ${JSON.stringify(signedMessage)}`,
       });
       return signedMessage;
@@ -491,7 +490,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
       createLog({
         providerType: 'ethereum',
         status: 'error',
-        method: 'signMessage',
+        method: 'personal_sign',
         message: error.message,
       });
     }
@@ -506,14 +505,14 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
       createLog({
         providerType: 'ethereum',
         status: 'success',
-        method: 'connect',
+        method: 'eth_requestAccounts',
         message: `Connected to account ${accounts[0]}`,
       });
     } catch (error) {
       createLog({
         providerType: 'ethereum',
         status: 'error',
-        method: 'connect',
+        method: 'eth_requestAccounts',
         message: error.message,
       });
     }
@@ -548,7 +547,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
       ethereum.chainId === SupportedEVMChainIds.EthereumMainnet
         ? SupportedEVMChainIds.EthereumGoerli
         : SupportedEVMChainIds.EthereumMainnet;
-    console.log(`Currently on ${ethereum.chainId}, switching to chain ${chainId}`);
+    console.log(`Currently on ${ethereum.chainId}, attempting to switch to chain ${chainId}`);
     try {
       await switchEthereumChain(ethereum, chainId);
       createLog({
@@ -561,7 +560,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
       createLog({
         providerType: 'ethereum',
         status: 'error',
-        method: 'disconnect', //TODO: Update method
+        method: 'wallet_switchEthereumChain',
         message: error.message,
       });
     }
@@ -570,47 +569,47 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
   const connectedMethods = useMemo(() => {
     return [
       {
-        chain: SupportedChainNames.SolanaMainnet,
+        chain: 'solana',
         name: 'Sign and Send Transaction',
         onClick: handleSignAndSendTransactionOnSolana,
       },
       {
-        chain: SupportedChainNames.EthereumMainnet,
+        chain: 'ethereum',
         name: 'Send Transaction',
         onClick: handleSendTransactionOnEthereum,
       },
       {
-        chain: SupportedChainNames.SolanaMainnet,
+        chain: 'solana',
         name: 'Sign Transaction',
         onClick: handleSignTransactionOnSolana,
       },
       {
-        chain: SupportedChainNames.SolanaMainnet,
+        chain: 'solana',
         name: 'Sign All Transactions',
         onClick: handleSignAllTransactionsOnSolana,
       },
       {
-        chain: SupportedChainNames.SolanaMainnet,
+        chain: 'solana',
         name: 'Sign Message',
         onClick: handleSignMessageOnSolana,
       },
       {
-        chain: SupportedChainNames.EthereumMainnet,
+        chain: 'ethereum',
         name: 'Sign Message',
         onClick: handleSignMessageOnEthereum,
       },
       {
-        chain: SupportedChainNames.EthereumMainnet,
+        chain: 'ethereum',
         name: 'Reconnect',
         onClick: handleReconnect,
       },
       {
-        chain: SupportedChainNames.EthereumMainnet,
+        chain: 'ethereum',
         name: 'Switch Chains',
         onClick: handleSwitchEthereumChains,
       },
       {
-        chain: SupportedChainNames.SolanaMainnet,
+        chain: 'solana',
         name: 'Disconnect',
         onClick: handleDisconnect,
       },

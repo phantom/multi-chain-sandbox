@@ -4,13 +4,9 @@ import { Web3Provider } from '@ethersproject/providers';
 
 type DisplayEncoding = 'utf8' | 'hex';
 
-type PhantomProviderType = 'solana' | 'ethereum';
-
 type SolanaEvent = 'connect' | 'disconnect' | 'accountChanged';
 
 type EthereumEvent = 'connect' | 'disconnect' | 'accountsChanged' | 'chainChanged';
-
-type PhantomEvent = EthereumEvent | SolanaEvent;
 
 type SolanaRequestMethod =
   | 'connect'
@@ -50,21 +46,7 @@ export interface PhantomSolanaProvider {
   request: (method: SolanaRequestMethod, params: any) => Promise<unknown>;
 }
 
-// export type PhantomEthereumProvider = any;
-
-// export interface PhantomEthereumProvider {
-//   chainId: string;
-//   isMetaMask?: boolean;
-//   isPhantom: boolean;
-//   networkVersion: string;
-//   selectedAddress: string;
-//   _events: Object;
-//   _eventsCount: Object;
-//   _metamask: Object;
-// }
-
-// TODO
-// export interface EthereumProvider {
+// TODO _events and _eventsCount
 export interface PhantomEthereumProvider {
   chainId: SupportedEVMChainIds;
   isMetaMask?: boolean; // will be removed after beta
@@ -84,12 +66,15 @@ export interface PhantomInjectedProvider {
   solana: PhantomSolanaProvider;
 }
 
-export type Status = 'success' | 'warning' | 'error' | 'info';
+export type PhantomProviderType = 'solana' | 'ethereum';
 
+export type PhantomEvent = EthereumEvent | SolanaEvent;
+
+export type Status = 'success' | 'warning' | 'error' | 'info';
 export interface TLog {
   providerType: PhantomProviderType;
   status: Status;
-  method?: PhantomRequestMethod | Extract<PhantomEvent, 'accountChanged'>;
+  method?: PhantomRequestMethod | Extract<PhantomEvent, 'accountChanged' | 'accountsChanged' | 'chainChanged'>;
   message: string;
   messageTwo?: string;
 }
@@ -108,17 +93,20 @@ export enum SupportedSolanaChainIds {
 }
 
 export enum SupportedChainNames {
-  EthereumMainnet = 'Ethereum',
+  EthereumMainnet = 'Ethereum Mainnet',
   EthereumGoerli = 'Ethereum Goerli',
-  PolygonMainnet = 'Polygon',
+  PolygonMainnet = 'Polygon Mainnet',
   PolygonMumbai = 'Polygon Mumbai',
-  SolanaMainnet = 'Solana',
+  SolanaMainnet = 'Solana Mainnet Beta',
   SolanaTestnet = 'Solana Testnet',
   SolanaDevnet = 'Solana Devnet',
 }
 
 export enum SupportedChainIcons {
-  Ethereum = 'https://api.phantom.app/image-proxy/?image=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Ftrustwallet%2Fassets%40master%2Fblockchains%2Fethereum%2Fassets%2F0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2%2Flogo.png&fit=cover&width=88&height=88',
-  Polygon = 'https://api.phantom.app/image-proxy/?image=https%3A%2F%2Fwallet-asset.matic.network%2Fimg%2Ftokens%2Fmatic.svg&fit=cover&width=88&height=88',
-  Solana = 'https://api.phantom.app/image-proxy/?image=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Fsolana-labs%2Ftoken-list%40main%2Fassets%2Fmainnet%2FSo11111111111111111111111111111111111111112%2Flogo.png&fit=cover&width=88&height=88',
+  Ethereum = '/images/ethereum.png',
+  Polygon = '/images/polygon.png',
+  Solana = '/images/solana.png',
+  // Ethereum = 'https://api.phantom.app/image-proxy/?image=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Ftrustwallet%2Fassets%40master%2Fblockchains%2Fethereum%2Fassets%2F0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2%2Flogo.png&fit=cover&width=88&height=88',
+  // Polygon = 'https://api.phantom.app/image-proxy/?image=https%3A%2F%2Fwallet-asset.matic.network%2Fimg%2Ftokens%2Fmatic.svg&fit=cover&width=88&height=88',
+  // Solana = 'https://api.phantom.app/image-proxy/?image=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Fsolana-labs%2Ftoken-list%40main%2Fassets%2Fmainnet%2FSo11111111111111111111111111111111111111112%2Flogo.png&fit=cover&width=88&height=88',
 }
