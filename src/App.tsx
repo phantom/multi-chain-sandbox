@@ -8,23 +8,12 @@ import styled from 'styled-components';
 import { clusterApiUrl, Connection, PublicKey } from '@solana/web3.js';
 
 import {
-  //   createAddressLookupTable,
-  //   createTransferTransaction,
   createTransferTransactionV0,
-  //   extendAddressLookupTable,
-  //   getSolanaProvider,
-  //   getEthereumProvider,
   pollSolanaSignatureStatus,
-  //   sendEVMTransaction,
-  signAllTransactionsOnSolana,
   sendTransactionOnEthereum,
   signAndSendTransactionOnSolana,
-  signTransactionOnSolana,
   signMessageOnEthereum,
   signMessageOnSolana,
-  //   signAndSendTransactionV0WithLookupTable,
-  //   signMessage,
-  //   signTransaction,
 } from './utils';
 
 import {
@@ -118,6 +107,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
     setLogs([]);
   }, [setLogs]);
 
+  /** Side effects to run once providers are detected */
   useEffect(() => {
     if (!provider) return;
     const { solana, ethereum } = provider;
@@ -262,7 +252,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
     };
   }, [provider, createLog]);
 
-  /** Connect */
+  /** Connect to both Solana and Ethereum Providers */
   const handleConnect = useCallback(async () => {
     if (!provider) return;
     const { solana, ethereum } = provider;
@@ -297,11 +287,11 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
 
     // Immediately switch to Ethereum Goerli for Sandbox purposes
     if (ethereum.chainId != SupportedEVMChainIds.EthereumGoerli) {
-      isEthereumChainIDReady(SupportedEVMChainIds.EthereumGoerli);
+      isEthereumChainIdReady(SupportedEVMChainIds.EthereumGoerli);
     }
   }, [provider, createLog]);
 
-  // /** SignAndSendTransactionV0 */
+  // /** SignAndSendTransaction via Solana Provider (v0 tx) */
   const handleSignAndSendTransactionOnSolana = useCallback(async () => {
     if (!provider) return;
     const { solana } = provider;
@@ -331,9 +321,10 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
     }
   }, [provider, createLog]);
 
+  /** SendTransaction via Ethereum Provider */
   const handleSendTransactionOnEthereum = useCallback(
     async (chainId) => {
-      const ready = await isEthereumChainIDReady(chainId);
+      const ready = await isEthereumChainIdReady(chainId);
       if (!ready) return;
       const { ethereum } = provider;
       try {
@@ -345,6 +336,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
           method: 'eth_sendTransaction',
           message: `Sending transaction ${txHash}`,
         });
+        // poll tx status until it is confirmed in a block, fails, or 30 seconds pass
         pollEthereumTransactionReceipt(txHash, ethereum, createLog);
       } catch (error) {
         createLog({
@@ -357,109 +349,69 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
     },
     [provider, createLog]
   );
-  // const handleSendTransactionOnEthereum = useCallback(async () => {
-  //   if (!provider) return;
-  //   const { web3 } = provider;
 
+  /** SignTransaction */
+  // const handleSignTransactionOnSolana = useCallback(async () => {
+  //   if (!provider) return;
+  //   const { solana } = provider;
   //   try {
-  //     // send the transaction up to the network
-  //     const transaction = await sendTransactionOnEthereum(web3);
+  //     const transaction = await createTransferTransactionV0(solana.publicKey, connection);
   //     createLog({
-  //       providerType: 'ethereum',
+  //       providerType: 'solana',
   //       status: 'info',
-  //       method: 'eth_sendTransaction',
-  //       message: `Sending transaction ${JSON.stringify(transaction)}`,
+  //       method: 'signTransaction',
+  //       message: `Requesting signature for: ${JSON.stringify(transaction)}`,
   //     });
-  //     try {
-  //       // wait for the transaction to be included in the next block
-  //       const txReceipt = await transaction.wait(1); // 1 is number of blocks to be confirmed before returning the receipt
-  //       createLog({
-  //         providerType: 'ethereum',
-  //         status: 'success',
-  //         method: 'eth_sendTransaction',
-  //         message: `TX included ${JSON.stringify(txReceipt)}`,
-  //       });
-  //     } catch (error) {
-  //       // log out if the tx didn't get included for some reason
-  //       createLog({
-  //         providerType: 'ethereum',
-  //         status: 'error',
-  //         method: 'eth_sendTransaction',
-  //         message: `Failed to include transaction on the chain: ${error.message}`,
-  //       });
-  //     }
+  //     const signedTransaction = await signTransactionOnSolana(solana, transaction);
+  //     createLog({
+  //       providerType: 'solana',
+  //       status: 'success',
+  //       method: 'signTransaction',
+  //       message: `Transaction signed: ${JSON.stringify(signedTransaction)}`,
+  //     });
   //   } catch (error) {
   //     createLog({
-  //       providerType: 'ethereum',
+  //       providerType: 'solana',
   //       status: 'error',
-  //       method: 'eth_sendTransaction',
+  //       method: 'signTransaction',
   //       message: error.message,
   //     });
   //   }
   // }, [provider, createLog]);
 
-  /** SignTransaction */
-  const handleSignTransactionOnSolana = useCallback(async () => {
-    if (!provider) return;
-    const { solana } = provider;
-    try {
-      const transaction = await createTransferTransactionV0(solana.publicKey, connection);
-      createLog({
-        providerType: 'solana',
-        status: 'info',
-        method: 'signTransaction',
-        message: `Requesting signature for: ${JSON.stringify(transaction)}`,
-      });
-      const signedTransaction = await signTransactionOnSolana(solana, transaction);
-      createLog({
-        providerType: 'solana',
-        status: 'success',
-        method: 'signTransaction',
-        message: `Transaction signed: ${JSON.stringify(signedTransaction)}`,
-      });
-    } catch (error) {
-      createLog({
-        providerType: 'solana',
-        status: 'error',
-        method: 'signTransaction',
-        message: error.message,
-      });
-    }
-  }, [provider, createLog]);
-
   // /** SignAllTransactions */
-  const handleSignAllTransactionsOnSolana = useCallback(async () => {
-    if (!provider) return;
-    const { solana } = provider;
-    try {
-      const transactions = [
-        await createTransferTransactionV0(solana.publicKey, connection),
-        await createTransferTransactionV0(solana.publicKey, connection),
-      ];
-      createLog({
-        providerType: 'solana',
-        status: 'info',
-        method: 'signAllTransactions',
-        message: `Requesting signature for: ${JSON.stringify(transactions)}`,
-      });
-      const signedTransactions = await signAllTransactionsOnSolana(solana, transactions[0], transactions[1]);
-      createLog({
-        providerType: 'solana',
-        status: 'success',
-        method: 'signAllTransactions',
-        message: `Transactions signed: ${JSON.stringify(signedTransactions)}`,
-      });
-    } catch (error) {
-      createLog({
-        providerType: 'solana',
-        status: 'error',
-        method: 'signAllTransactions',
-        message: error.message,
-      });
-    }
-  }, [provider, createLog]);
+  // const handleSignAllTransactionsOnSolana = useCallback(async () => {
+  //   if (!provider) return;
+  //   const { solana } = provider;
+  //   try {
+  //     const transactions = [
+  //       await createTransferTransactionV0(solana.publicKey, connection),
+  //       await createTransferTransactionV0(solana.publicKey, connection),
+  //     ];
+  //     createLog({
+  //       providerType: 'solana',
+  //       status: 'info',
+  //       method: 'signAllTransactions',
+  //       message: `Requesting signature for: ${JSON.stringify(transactions)}`,
+  //     });
+  //     const signedTransactions = await signAllTransactionsOnSolana(solana, transactions[0], transactions[1]);
+  //     createLog({
+  //       providerType: 'solana',
+  //       status: 'success',
+  //       method: 'signAllTransactions',
+  //       message: `Transactions signed: ${JSON.stringify(signedTransactions)}`,
+  //     });
+  //   } catch (error) {
+  //     createLog({
+  //       providerType: 'solana',
+  //       status: 'error',
+  //       method: 'signAllTransactions',
+  //       message: error.message,
+  //     });
+  //   }
+  // }, [provider, createLog]);
 
-  // /** SignMessage */
+  // /** SignMessage via Solana Provider */
   const handleSignMessageOnSolana = useCallback(async () => {
     if (!provider) return;
     const { solana } = provider;
@@ -482,10 +434,10 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
     }
   }, [provider, createLog]);
 
-  // /** SignMessage */
+  /** SignMessage via Ethereum Provider */
   const handleSignMessageOnEthereum = useCallback(
     async (chainId) => {
-      const ready = await isEthereumChainIDReady(chainId);
+      const ready = await isEthereumChainIdReady(chainId);
       if (!ready) return;
       const { ethereum } = provider;
       try {
@@ -509,10 +461,10 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
     [provider, createLog]
   );
 
-  /** Re-connect */
+  /** Re-connect to Ethereum Chain */
   const handleReconnect = useCallback(
     async (chainId: SupportedEVMChainIds) => {
-      const ready = await isEthereumChainIDReady(chainId);
+      const ready = await isEthereumChainIdReady(chainId);
       if (!ready) return;
       const { ethereum } = provider;
       try {
@@ -535,36 +487,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
     [provider, createLog]
   );
 
-  const handleToggleNetwork = useCallback(
-    async (chain) => {
-      if (!provider) return;
-      const { ethereum } = provider;
-
-      // if (chain === "ethereum") {
-      //   ethereum.chainId === Po
-      // }
-
-      try {
-        const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-        createLog({
-          providerType: 'ethereum',
-          status: 'success',
-          method: 'eth_requestAccounts',
-          message: `Connected to account ${accounts[0]}`,
-        });
-      } catch (error) {
-        createLog({
-          providerType: 'ethereum',
-          status: 'error',
-          method: 'eth_requestAccounts',
-          message: error.message,
-        });
-      }
-    },
-    [provider, createLog]
-  );
-
-  /** Disconnect */
+  /** Disconnect from Solana */
   const handleDisconnect = useCallback(async () => {
     console.log('disconnect');
     if (!provider) return;
@@ -582,7 +505,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
   }, [provider, createLog]);
 
   /** Switch Ethereum Chains */
-  const isEthereumChainIDReady = useCallback(
+  const isEthereumChainIdReady = useCallback(
     async (chainId: SupportedEVMChainIds) => {
       if (!provider) return false;
       const { ethereum } = provider;
@@ -621,16 +544,6 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
         name: 'Send Transaction',
         onClick: handleSendTransactionOnEthereum,
       },
-      // {
-      //   chain: 'solana',
-      //   name: 'Sign Transaction',
-      //   onClick: handleSignTransactionOnSolana,
-      // },
-      // {
-      //   chain: 'solana',
-      //   name: 'Sign All Transactions',
-      //   onClick: handleSignAllTransactionsOnSolana,
-      // },
       {
         chain: 'solana',
         name: 'Sign Message',
@@ -657,8 +570,6 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
     handleSendTransactionOnEthereum,
     handleSignMessageOnSolana,
     handleSignMessageOnEthereum,
-    handleSignTransactionOnSolana,
-    handleSignAllTransactionsOnSolana,
     handleReconnect,
     handleDisconnect,
   ]);

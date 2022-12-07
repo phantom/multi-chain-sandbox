@@ -221,9 +221,6 @@ interface Props {
 [];
 const Sidebar = React.memo((props: Props) => {
   const { connectedAccounts, connectedEthereumChainId, connectedMethods, connect } = props;
-  // const backgroundEthereumChains = Object.values(SupportedEVMChainIds).filter(
-  //   (chainId) => chainId !== connectedEthereumChainId
-  // );
   return (
     <Main>
       <Body>
@@ -250,16 +247,6 @@ const Sidebar = React.memo((props: Props) => {
               </AccountRow>
               <Divider />
             </div>
-            {/* <select>
-              <ChainIcon src={getChainIcon(connectedEthereumChainId)} height="16px" />
-              <Pre>{getChainName(connectedEthereumChainId)}</Pre>
-              {backgroundEthereumChains.map((chainId, i) => (
-                <option
-                  key={`${chainId}-${i}`}
-                  onClick={() => switchEthereumChains(chainId)}
-                >{`Switch to ${getChainName(chainId)}`}</option>
-              ))}
-            </select> */}
             <ChainHeader>
               <ChainIcon
                 src={SupportedChainIcons.Ethereum}
