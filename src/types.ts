@@ -103,6 +103,16 @@ export enum SupportedChainNames {
   SolanaDevnet = 'Solana Devnet',
 }
 
+export enum SupportedChainTypes {
+  EthereumMainnet = 'ethereum',
+  EthereumGoerli = 'ethereum',
+  PolygonMainnet = 'polygon',
+  PolygonMumbai = 'polygon',
+  SolanaMainnet = 'solana',
+  SolanaTestnet = 'solana',
+  SolanaDevnet = 'solana',
+}
+
 export enum SupportedChainIcons {
   Ethereum = '/images/ethereum.png',
   Polygon = '/images/polygon.png',

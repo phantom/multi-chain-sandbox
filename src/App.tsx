@@ -107,6 +107,8 @@ interface Props {
  */
 const useProps = (provider: PhantomInjectedProvider | null): Props => {
   const [logs, setLogs] = useState<TLog[]>([]);
+  const [isEthereumMainnetToggled, setIsEthereumMainnetToggled] = useState(false);
+  const [isPolygonMainnetToggled, setIsPolygonMainnetToggled] = useState(false);
 
   const createLog = useCallback(
     (log: TLog) => {
@@ -296,6 +298,11 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
         method: 'eth_requestAccounts',
         message: error.message,
       });
+    }
+
+    // Immediately switch to Ethereum Goerli for Sandbox purposes
+    if (ethereum.chainId != SupportedEVMChainIds.EthereumGoerli) {
+      handleSwitchEthereumChains(SupportedEVMChainIds.EthereumGoerli);
     }
   }, [provider, createLog]);
 
@@ -521,6 +528,35 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
       });
     }
   }, [provider, createLog]);
+
+  const handleToggleNetwork = useCallback(
+    async (chain) => {
+      if (!provider) return;
+      const { ethereum } = provider;
+
+      // if (chain === "ethereum") {
+      //   ethereum.chainId === Po
+      // }
+
+      try {
+        const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+        createLog({
+          providerType: 'ethereum',
+          status: 'success',
+          method: 'eth_requestAccounts',
+          message: `Connected to account ${accounts[0]}`,
+        });
+      } catch (error) {
+        createLog({
+          providerType: 'ethereum',
+          status: 'error',
+          method: 'eth_requestAccounts',
+          message: error.message,
+        });
+      }
+    },
+    [provider, createLog]
+  );
 
   /** Disconnect */
   const handleDisconnect = useCallback(async () => {

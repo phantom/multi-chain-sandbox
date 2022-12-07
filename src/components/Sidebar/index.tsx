@@ -196,6 +196,14 @@ const ChainIconAbsolute = styled.img`
   border-radius: 6px 0 0 6px;
 `;
 
+const ChainHeader = styled.div`
+  display: flex;
+  width: 100%;
+  justify-content: flex-start;
+  align-items: center;
+  margin: 5px 0 10px;
+`;
+
 // =============================================================================
 // Typedefs
 // =============================================================================
@@ -237,10 +245,6 @@ const Sidebar = React.memo((props: Props) => {
                 <ChainIcon src={SupportedChainIcons.Polygon} height="36px" />
                 <Badge>{connectedAccounts?.ethereum}</Badge>
               </AccountRow>
-              {/* <AccountRow>
-                <ChainIcon src={getChainIcon(connectedEthereumChainId)} height="36px" />
-                <Badge>{connectedAccounts?.ethereum}</Badge>
-              </AccountRow> */}
               <AccountRow>
                 <ChainIcon src={SupportedChainIcons.Solana} height="36px" />
                 <Badge>{connectedAccounts?.solana?.toBase58()}</Badge>
@@ -257,14 +261,14 @@ const Sidebar = React.memo((props: Props) => {
                 >{`Switch to ${getChainName(chainId)}`}</option>
               ))}
             </select> */}
-            <div style={{ display: 'flex', margin: '5px 0 10px' }}>
+            <ChainHeader>
               <ChainIcon
                 src={SupportedChainIcons.Ethereum}
                 height="16px"
                 style={{ marginRight: '6px', borderRadius: '6px' }}
               />
               <Tag>{getChainName(connectedEthereumChainId)}</Tag>
-            </div>
+            </ChainHeader>
             {connectedMethods
               .filter((method) => method.chain === 'ethereum')
               .map((method, i) => (
@@ -280,14 +284,14 @@ const Sidebar = React.memo((props: Props) => {
                   {method.name}
                 </Button>
               ))}
-            <div style={{ display: 'flex', margin: '5px 0 10px' }}>
+            <ChainHeader>
               <ChainIcon
                 src={SupportedChainIcons.Polygon}
                 height="16px"
                 style={{ marginRight: '6px', borderRadius: '6px' }}
               />
               <Tag>{SupportedChainNames.PolygonMainnet}</Tag>
-            </div>
+            </ChainHeader>
             {connectedMethods
               .filter((method) => method.chain === 'ethereum')
               .map((method, i) => (
@@ -303,14 +307,14 @@ const Sidebar = React.memo((props: Props) => {
                   {method.name}
                 </Button>
               ))}
-            <div style={{ display: 'flex', margin: '5px 0 10px' }}>
+            <ChainHeader>
               <ChainIcon
                 src={SupportedChainIcons.Solana}
                 height="16px"
                 style={{ marginRight: '6px', borderRadius: '6px' }}
               />
               <Tag>{SupportedChainNames.SolanaDevnet}</Tag>
-            </div>
+            </ChainHeader>
             {connectedMethods
               .filter((method) => method.chain === 'solana')
               .map((method, i) => (
@@ -321,7 +325,9 @@ const Sidebar = React.memo((props: Props) => {
           </>
         ) : (
           // not connected
-          <Button onClick={connect}>Connect to Phantom</Button>
+          <Button onClick={connect} style={{ marginTop: '15px' }}>
+            Connect to Phantom
+          </Button>
         )}
       </Body>
       {/* 😊 💕  */}
