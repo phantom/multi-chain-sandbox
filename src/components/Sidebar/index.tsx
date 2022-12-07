@@ -213,7 +213,6 @@ interface Props {
   connectedEthereumChainId: SupportedEVMChainIds | null;
   connectedAccounts: ConnectedAccounts;
   connect: () => Promise<void>;
-  switchEthereumChains: (chaindId: SupportedEVMChainIds) => Promise<void>;
 }
 
 // =============================================================================
@@ -221,10 +220,10 @@ interface Props {
 // =============================================================================
 [];
 const Sidebar = React.memo((props: Props) => {
-  const { connectedAccounts, connectedEthereumChainId, connectedMethods, connect, switchEthereumChains } = props;
-  const backgroundEthereumChains = Object.values(SupportedEVMChainIds).filter(
-    (chainId) => chainId !== connectedEthereumChainId
-  );
+  const { connectedAccounts, connectedEthereumChainId, connectedMethods, connect } = props;
+  // const backgroundEthereumChains = Object.values(SupportedEVMChainIds).filter(
+  //   (chainId) => chainId !== connectedEthereumChainId
+  // );
   return (
     <Main>
       <Body>
@@ -267,20 +266,12 @@ const Sidebar = React.memo((props: Props) => {
                 height="16px"
                 style={{ marginRight: '6px', borderRadius: '6px' }}
               />
-              <Tag>{getChainName(connectedEthereumChainId)}</Tag>
+              <Tag>{SupportedChainNames.EthereumGoerli}</Tag>
             </ChainHeader>
             {connectedMethods
               .filter((method) => method.chain === 'ethereum')
               .map((method, i) => (
-                <Button
-                  key={`${method.name}-${i}`}
-                  onClick={() => {
-                    if (connectedEthereumChainId !== SupportedEVMChainIds.EthereumMainnet) {
-                      switchEthereumChains(SupportedEVMChainIds.EthereumMainnet);
-                    }
-                    method.onClick();
-                  }}
-                >
+                <Button key={`${method.name}-${i}`} onClick={() => method.onClick(SupportedEVMChainIds.EthereumGoerli)}>
                   {method.name}
                 </Button>
               ))}
@@ -290,19 +281,15 @@ const Sidebar = React.memo((props: Props) => {
                 height="16px"
                 style={{ marginRight: '6px', borderRadius: '6px' }}
               />
-              <Tag>{SupportedChainNames.PolygonMainnet}</Tag>
+              <Tag>{SupportedChainNames.PolygonMumbai}</Tag>
             </ChainHeader>
             {connectedMethods
               .filter((method) => method.chain === 'ethereum')
               .map((method, i) => (
                 <Button
                   key={`${method.name}-${i}`}
-                  onClick={() => {
-                    if (connectedEthereumChainId !== SupportedEVMChainIds.EthereumGoerli) {
-                      switchEthereumChains(SupportedEVMChainIds.EthereumGoerli);
-                    }
-                    method.onClick();
-                  }}
+                  onClick={() => method.onClick(SupportedEVMChainIds.PolygonMumbai)}
+                  // onClick={() => method.onClick(SupportedEVMChainIds.EthereumMainnet)}
                 >
                   {method.name}
                 </Button>

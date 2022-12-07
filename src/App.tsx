@@ -84,7 +84,7 @@ export type ConnectedMethods =
   | {
       chain: string;
       name: string;
-      onClick: (props?: any) => Promise<void>;
+      onClick: (chainId?: any) => Promise<void | boolean>;
     };
 
 interface Props {
@@ -92,7 +92,6 @@ interface Props {
   connectedEthereumChainId: SupportedEVMChainIds | null;
   connectedMethods: ConnectedMethods[];
   handleConnect: () => Promise<void>;
-  handleSwitchEthereumChains: (chainId: SupportedEVMChainIds) => Promise<void>;
   logs: TLog[];
   clearLogs: () => void;
 }
@@ -107,8 +106,6 @@ interface Props {
  */
 const useProps = (provider: PhantomInjectedProvider | null): Props => {
   const [logs, setLogs] = useState<TLog[]>([]);
-  const [isEthereumMainnetToggled, setIsEthereumMainnetToggled] = useState(false);
-  const [isPolygonMainnetToggled, setIsPolygonMainnetToggled] = useState(false);
 
   const createLog = useCallback(
     (log: TLog) => {
@@ -174,7 +171,6 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
           method: 'accountsChanged',
           message: `Switched to account ${newAccounts[0]}`,
         });
-        // accounts = newAccounts
       } else {
         /**
          * In this case dApps could...
@@ -243,12 +239,11 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
       }
 
       ethereum.on('chainChanged', (chainId: SupportedEVMChainIds) => {
-        console.log('HELLO');
         createLog({
           providerType: 'ethereum',
           status: 'info',
           method: 'chainChanged',
-          message: `Switched to chain ${chainId}`,
+          message: `Switched to ${getChainName(chainId)} (Chain ID: ${chainId})`,
         });
 
         ethereum.request({ method: 'eth_requestAccounts' }).catch((error) => {
@@ -302,7 +297,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
 
     // Immediately switch to Ethereum Goerli for Sandbox purposes
     if (ethereum.chainId != SupportedEVMChainIds.EthereumGoerli) {
-      handleSwitchEthereumChains(SupportedEVMChainIds.EthereumGoerli);
+      isEthereumChainIDReady(SupportedEVMChainIds.EthereumGoerli);
     }
   }, [provider, createLog]);
 
@@ -336,29 +331,32 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
     }
   }, [provider, createLog]);
 
-  const handleSendTransactionOnEthereum = useCallback(async () => {
-    if (!provider) return;
-    const { ethereum } = provider;
-
-    try {
-      // send the transaction up to the network
-      const transaction = await sendTransactionOnEthereum(ethereum);
-      createLog({
-        providerType: 'ethereum',
-        status: 'info',
-        method: 'eth_sendTransaction',
-        message: `Sending transaction ${JSON.stringify(transaction)}`,
-      });
-      pollEthereumTransactionReceipt(transaction, ethereum, createLog);
-    } catch (error) {
-      createLog({
-        providerType: 'ethereum',
-        status: 'error',
-        method: 'eth_sendTransaction',
-        message: error.message,
-      });
-    }
-  }, [provider, createLog]);
+  const handleSendTransactionOnEthereum = useCallback(
+    async (chainId) => {
+      const ready = await isEthereumChainIDReady(chainId);
+      if (!ready) return;
+      const { ethereum } = provider;
+      try {
+        // send the transaction up to the network
+        const txHash = await sendTransactionOnEthereum(ethereum);
+        createLog({
+          providerType: 'ethereum',
+          status: 'info',
+          method: 'eth_sendTransaction',
+          message: `Sending transaction ${txHash}`,
+        });
+        pollEthereumTransactionReceipt(txHash, ethereum, createLog);
+      } catch (error) {
+        createLog({
+          providerType: 'ethereum',
+          status: 'error',
+          method: 'eth_sendTransaction',
+          message: error.message,
+        });
+      }
+    },
+    [provider, createLog]
+  );
   // const handleSendTransactionOnEthereum = useCallback(async () => {
   //   if (!provider) return;
   //   const { web3 } = provider;
@@ -485,49 +483,57 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
   }, [provider, createLog]);
 
   // /** SignMessage */
-  const handleSignMessageOnEthereum = useCallback(async () => {
-    if (!provider) return;
-    const { ethereum } = provider;
-    try {
-      const signedMessage = await signMessageOnEthereum(ethereum, message);
-      createLog({
-        providerType: 'ethereum',
-        status: 'success',
-        method: 'personal_sign',
-        message: `Message signed: ${signedMessage}`,
-      });
-      return signedMessage;
-    } catch (error) {
-      createLog({
-        providerType: 'ethereum',
-        status: 'error',
-        method: 'personal_sign',
-        message: error.message,
-      });
-    }
-  }, [provider, createLog]);
+  const handleSignMessageOnEthereum = useCallback(
+    async (chainId) => {
+      const ready = await isEthereumChainIDReady(chainId);
+      if (!ready) return;
+      const { ethereum } = provider;
+      try {
+        const signedMessage = await signMessageOnEthereum(ethereum, message);
+        createLog({
+          providerType: 'ethereum',
+          status: 'success',
+          method: 'personal_sign',
+          message: `Message signed: ${signedMessage}`,
+        });
+        return signedMessage;
+      } catch (error) {
+        createLog({
+          providerType: 'ethereum',
+          status: 'error',
+          method: 'personal_sign',
+          message: error.message,
+        });
+      }
+    },
+    [provider, createLog]
+  );
 
   /** Re-connect */
-  const handleReconnect = useCallback(async () => {
-    if (!provider) return;
-    const { ethereum } = provider;
-    try {
-      const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-      createLog({
-        providerType: 'ethereum',
-        status: 'success',
-        method: 'eth_requestAccounts',
-        message: `Connected to account ${accounts[0]}`,
-      });
-    } catch (error) {
-      createLog({
-        providerType: 'ethereum',
-        status: 'error',
-        method: 'eth_requestAccounts',
-        message: error.message,
-      });
-    }
-  }, [provider, createLog]);
+  const handleReconnect = useCallback(
+    async (chainId: SupportedEVMChainIds) => {
+      const ready = await isEthereumChainIDReady(chainId);
+      if (!ready) return;
+      const { ethereum } = provider;
+      try {
+        const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+        createLog({
+          providerType: 'ethereum',
+          status: 'success',
+          method: 'eth_requestAccounts',
+          message: `Connected to account ${accounts[0]}`,
+        });
+      } catch (error) {
+        createLog({
+          providerType: 'ethereum',
+          status: 'error',
+          method: 'eth_requestAccounts',
+          message: error.message,
+        });
+      }
+    },
+    [provider, createLog]
+  );
 
   const handleToggleNetwork = useCallback(
     async (chain) => {
@@ -576,19 +582,11 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
   }, [provider, createLog]);
 
   /** Switch Ethereum Chains */
-  const handleSwitchEthereumChains = useCallback(
-    async (chainId) => {
-      console.log('switch ethereum chains');
-      if (!provider) return;
-      // const chainId = await provider.request({
-      //   method: "eth_chainId"
-      // });
+  const isEthereumChainIDReady = useCallback(
+    async (chainId: SupportedEVMChainIds) => {
+      if (!provider) return false;
       const { ethereum } = provider;
-      // const chainId =
-      //   ethereum.chainId === SupportedEVMChainIds.EthereumMainnet
-      //     ? SupportedEVMChainIds.EthereumGoerli
-      //     : SupportedEVMChainIds.EthereumMainnet;
-      console.log(`Currently on ${ethereum.chainId}, attempting to switch to chain ${chainId}`);
+      if (chainId === ethereum.chainId) return true;
       try {
         await switchEthereumChain(ethereum, chainId);
         createLog({
@@ -597,6 +595,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
           method: 'wallet_switchEthereumChain',
           message: `Switched to ${getChainName(ethereum.chainId)} (Chain ID: ${ethereum.chainId})`,
         });
+        return true;
       } catch (error) {
         createLog({
           providerType: 'ethereum',
@@ -604,6 +603,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
           method: 'wallet_switchEthereumChain',
           message: error.message,
         });
+        return false;
       }
     },
     [provider, createLog]
@@ -671,7 +671,6 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
     connectedEthereumChainId: provider?.ethereum?.chainId,
     connectedMethods,
     handleConnect,
-    handleSwitchEthereumChains,
     logs,
     clearLogs,
   };
@@ -682,15 +681,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
 // =============================================================================
 
 const StatelessApp = React.memo((props: Props) => {
-  const {
-    connectedAccounts,
-    connectedEthereumChainId,
-    connectedMethods,
-    handleConnect,
-    handleSwitchEthereumChains,
-    logs,
-    clearLogs,
-  } = props;
+  const { connectedAccounts, connectedEthereumChainId, connectedMethods, handleConnect, logs, clearLogs } = props;
 
   return (
     <StyledApp>
@@ -699,7 +690,6 @@ const StatelessApp = React.memo((props: Props) => {
         connectedEthereumChainId={connectedEthereumChainId}
         connectedMethods={connectedMethods}
         connect={handleConnect}
-        switchEthereumChains={handleSwitchEthereumChains}
       />
       <Logs connectedAccounts={connectedAccounts} logs={logs} clearLogs={clearLogs} />
     </StyledApp>
