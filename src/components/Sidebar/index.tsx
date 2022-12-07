@@ -58,7 +58,8 @@ const Link = styled.a.attrs({
   flex-direction: column;
   align-items: flex-end;
   text-decoration: none;
-  margin-bottom: 30px;
+  margin-bottom: 15px;
+  // margin-bottom: 30px;
   padding: 5px;
   &:focus-visible {
     outline: 2px solid ${hexToRGB(GRAY, 0.5)};
@@ -246,7 +247,7 @@ const Sidebar = React.memo((props: Props) => {
               </AccountRow>
               <Divider />
             </div>
-            <select>
+            {/* <select>
               <ChainIcon src={getChainIcon(connectedEthereumChainId)} height="16px" />
               <Pre>{getChainName(connectedEthereumChainId)}</Pre>
               {backgroundEthereumChains.map((chainId, i) => (
@@ -255,17 +256,60 @@ const Sidebar = React.memo((props: Props) => {
                   onClick={() => switchEthereumChains(chainId)}
                 >{`Switch to ${getChainName(chainId)}`}</option>
               ))}
-            </select>
+            </select> */}
+            <div style={{ display: 'flex', margin: '5px 0 10px' }}>
+              <ChainIcon
+                src={SupportedChainIcons.Ethereum}
+                height="16px"
+                style={{ marginRight: '6px', borderRadius: '6px' }}
+              />
+              <Tag>{getChainName(connectedEthereumChainId)}</Tag>
+            </div>
             {connectedMethods
               .filter((method) => method.chain === 'ethereum')
               .map((method, i) => (
-                <Button key={`${method.name}-${i}`} onClick={method.onClick}>
+                <Button
+                  key={`${method.name}-${i}`}
+                  onClick={() => {
+                    if (connectedEthereumChainId !== SupportedEVMChainIds.EthereumMainnet) {
+                      switchEthereumChains(SupportedEVMChainIds.EthereumMainnet);
+                    }
+                    method.onClick();
+                  }}
+                >
                   {method.name}
                 </Button>
               ))}
-            <div>
-              <ChainIcon src={getChainIcon(connectedEthereumChainId)} height="16px" />
-              <Pre>{SupportedChainNames.SolanaDevnet}</Pre>
+            <div style={{ display: 'flex', margin: '5px 0 10px' }}>
+              <ChainIcon
+                src={SupportedChainIcons.Polygon}
+                height="16px"
+                style={{ marginRight: '6px', borderRadius: '6px' }}
+              />
+              <Tag>{SupportedChainNames.PolygonMainnet}</Tag>
+            </div>
+            {connectedMethods
+              .filter((method) => method.chain === 'ethereum')
+              .map((method, i) => (
+                <Button
+                  key={`${method.name}-${i}`}
+                  onClick={() => {
+                    if (connectedEthereumChainId !== SupportedEVMChainIds.EthereumGoerli) {
+                      switchEthereumChains(SupportedEVMChainIds.EthereumGoerli);
+                    }
+                    method.onClick();
+                  }}
+                >
+                  {method.name}
+                </Button>
+              ))}
+            <div style={{ display: 'flex', margin: '5px 0 10px' }}>
+              <ChainIcon
+                src={SupportedChainIcons.Solana}
+                height="16px"
+                style={{ marginRight: '6px', borderRadius: '6px' }}
+              />
+              <Tag>{SupportedChainNames.SolanaDevnet}</Tag>
             </div>
             {connectedMethods
               .filter((method) => method.chain === 'solana')

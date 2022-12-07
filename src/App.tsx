@@ -585,16 +585,16 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
         name: 'Send Transaction',
         onClick: handleSendTransactionOnEthereum,
       },
-      {
-        chain: 'solana',
-        name: 'Sign Transaction',
-        onClick: handleSignTransactionOnSolana,
-      },
-      {
-        chain: 'solana',
-        name: 'Sign All Transactions',
-        onClick: handleSignAllTransactionsOnSolana,
-      },
+      // {
+      //   chain: 'solana',
+      //   name: 'Sign Transaction',
+      //   onClick: handleSignTransactionOnSolana,
+      // },
+      // {
+      //   chain: 'solana',
+      //   name: 'Sign All Transactions',
+      //   onClick: handleSignAllTransactionsOnSolana,
+      // },
       {
         chain: 'solana',
         name: 'Sign Message',
