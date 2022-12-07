@@ -34,6 +34,7 @@ import {
   SupportedEVMChainIds,
   PhantomProviderType,
   TLog,
+  SupportedSolanaChainIds,
 } from './types';
 
 import { Logs, Sidebar, NoProvider } from './components';
@@ -42,6 +43,7 @@ import getPhantomMultiChainProvider from './utils/getPhantomMultiChainProvider';
 import { SUPPORTED_CHAINS, SUPPORTED_ETHEREUM_CHAIN_IDS } from './constants';
 import getChainName from './utils/getChainName';
 import switchEthereumChain from './utils/switchEthereumChain';
+import pollEthereumTransactionReceipt from './utils/pollEthereumTransactionReceipt';
 
 // =============================================================================
 // Styled Components
@@ -77,12 +79,12 @@ export type ConnectedMethods =
   | {
       chain: string;
       name: string;
-      onClick: () => Promise<string>;
+      onClick: (props?: any) => Promise<string>;
     }
   | {
       chain: string;
       name: string;
-      onClick: () => Promise<void>;
+      onClick: (props?: any) => Promise<void>;
     };
 
 interface Props {
@@ -90,6 +92,7 @@ interface Props {
   connectedEthereumChainId: SupportedEVMChainIds | null;
   connectedMethods: ConnectedMethods[];
   handleConnect: () => Promise<void>;
+  handleSwitchEthereumChains: (chainId: SupportedEVMChainIds) => Promise<void>;
   logs: TLog[];
   clearLogs: () => void;
 }
@@ -339,6 +342,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
         method: 'eth_sendTransaction',
         message: `Sending transaction ${JSON.stringify(transaction)}`,
       });
+      pollEthereumTransactionReceipt(transaction, ethereum, createLog);
     } catch (error) {
       createLog({
         providerType: 'ethereum',
@@ -478,12 +482,12 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
     if (!provider) return;
     const { ethereum } = provider;
     try {
-      const signedMessage = await signMessageOnEthereum(ethereum, message, ethereum.selectedAddress);
+      const signedMessage = await signMessageOnEthereum(ethereum, message);
       createLog({
         providerType: 'ethereum',
         status: 'success',
         method: 'personal_sign',
-        message: `Message signed: ${JSON.stringify(signedMessage)}`,
+        message: `Message signed: ${signedMessage}`,
       });
       return signedMessage;
     } catch (error) {
@@ -536,35 +540,38 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
   }, [provider, createLog]);
 
   /** Switch Ethereum Chains */
-  const handleSwitchEthereumChains = useCallback(async () => {
-    console.log('switch ethereum chains');
-    if (!provider) return;
-    // const chainId = await provider.request({
-    //   method: "eth_chainId"
-    // });
-    const { ethereum } = provider;
-    const chainId =
-      ethereum.chainId === SupportedEVMChainIds.EthereumMainnet
-        ? SupportedEVMChainIds.EthereumGoerli
-        : SupportedEVMChainIds.EthereumMainnet;
-    console.log(`Currently on ${ethereum.chainId}, attempting to switch to chain ${chainId}`);
-    try {
-      await switchEthereumChain(ethereum, chainId);
-      createLog({
-        providerType: 'ethereum',
-        status: 'success',
-        method: 'wallet_switchEthereumChain',
-        message: `Switched to ${getChainName(ethereum.chainId)} (Chain ID: ${ethereum.chainId})`,
-      });
-    } catch (error) {
-      createLog({
-        providerType: 'ethereum',
-        status: 'error',
-        method: 'wallet_switchEthereumChain',
-        message: error.message,
-      });
-    }
-  }, [provider, createLog]);
+  const handleSwitchEthereumChains = useCallback(
+    async (chainId) => {
+      console.log('switch ethereum chains');
+      if (!provider) return;
+      // const chainId = await provider.request({
+      //   method: "eth_chainId"
+      // });
+      const { ethereum } = provider;
+      // const chainId =
+      //   ethereum.chainId === SupportedEVMChainIds.EthereumMainnet
+      //     ? SupportedEVMChainIds.EthereumGoerli
+      //     : SupportedEVMChainIds.EthereumMainnet;
+      console.log(`Currently on ${ethereum.chainId}, attempting to switch to chain ${chainId}`);
+      try {
+        await switchEthereumChain(ethereum, chainId);
+        createLog({
+          providerType: 'ethereum',
+          status: 'success',
+          method: 'wallet_switchEthereumChain',
+          message: `Switched to ${getChainName(ethereum.chainId)} (Chain ID: ${ethereum.chainId})`,
+        });
+      } catch (error) {
+        createLog({
+          providerType: 'ethereum',
+          status: 'error',
+          method: 'wallet_switchEthereumChain',
+          message: error.message,
+        });
+      }
+    },
+    [provider, createLog]
+  );
 
   const connectedMethods = useMemo(() => {
     return [
@@ -604,11 +611,6 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
         onClick: handleReconnect,
       },
       {
-        chain: 'ethereum',
-        name: 'Switch Chains',
-        onClick: handleSwitchEthereumChains,
-      },
-      {
         chain: 'solana',
         name: 'Disconnect',
         onClick: handleDisconnect,
@@ -633,6 +635,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
     connectedEthereumChainId: provider?.ethereum?.chainId,
     connectedMethods,
     handleConnect,
+    handleSwitchEthereumChains,
     logs,
     clearLogs,
   };
@@ -643,7 +646,15 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
 // =============================================================================
 
 const StatelessApp = React.memo((props: Props) => {
-  const { connectedAccounts, connectedEthereumChainId, connectedMethods, handleConnect, logs, clearLogs } = props;
+  const {
+    connectedAccounts,
+    connectedEthereumChainId,
+    connectedMethods,
+    handleConnect,
+    handleSwitchEthereumChains,
+    logs,
+    clearLogs,
+  } = props;
 
   return (
     <StyledApp>
@@ -652,6 +663,7 @@ const StatelessApp = React.memo((props: Props) => {
         connectedEthereumChainId={connectedEthereumChainId}
         connectedMethods={connectedMethods}
         connect={handleConnect}
+        switchEthereumChains={handleSwitchEthereumChains}
       />
       <Logs connectedAccounts={connectedAccounts} logs={logs} clearLogs={clearLogs} />
     </StyledApp>

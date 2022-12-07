@@ -3,11 +3,11 @@ import { Web3Provider } from '@ethersproject/providers';
 /**
  * TODO
  */
-const signMessageOnEthereum = async (provider: any, message: string, account: string): Promise<string> => {
+const signMessageOnEthereum = async (provider: any, message: string): Promise<string> => {
   try {
     const signedMessage = await provider.request({
       method: 'personal_sign',
-      params: [message, account],
+      params: [message, provider.selectedAddress],
     });
     return signedMessage;
   } catch (error) {

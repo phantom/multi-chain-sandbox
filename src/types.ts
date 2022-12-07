@@ -18,6 +18,7 @@ type SolanaRequestMethod =
 
 type EthereumRequestMethod =
   | 'eth_gasPrice'
+  | 'eth_getTransactionReceipt'
   | 'eth_sendTransaction'
   | 'eth_requestAccounts'
   | 'personal_sign'
@@ -55,7 +56,7 @@ export interface PhantomEthereumProvider {
   selectedAddress: string;
   isConnected: () => boolean;
   on: (event: EthereumEvent, handler: (args: any) => void) => void;
-  request: (args: { method: EthereumRequestMethod; params?: any }) => Promise<unknown>;
+  request: (args: { method: EthereumRequestMethod; params?: unknown[] | object }) => Promise<unknown>;
   _metamask: {
     isUnlocked: boolean;
   };
@@ -106,7 +107,4 @@ export enum SupportedChainIcons {
   Ethereum = '/images/ethereum.png',
   Polygon = '/images/polygon.png',
   Solana = '/images/solana.png',
-  // Ethereum = 'https://api.phantom.app/image-proxy/?image=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Ftrustwallet%2Fassets%40master%2Fblockchains%2Fethereum%2Fassets%2F0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2%2Flogo.png&fit=cover&width=88&height=88',
-  // Polygon = 'https://api.phantom.app/image-proxy/?image=https%3A%2F%2Fwallet-asset.matic.network%2Fimg%2Ftokens%2Fmatic.svg&fit=cover&width=88&height=88',
-  // Solana = 'https://api.phantom.app/image-proxy/?image=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Fsolana-labs%2Ftoken-list%40main%2Fassets%2Fmainnet%2FSo11111111111111111111111111111111111111112%2Flogo.png&fit=cover&width=88&height=88',
 }

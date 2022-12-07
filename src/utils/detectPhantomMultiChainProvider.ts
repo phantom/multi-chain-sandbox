@@ -4,6 +4,7 @@ import getSolanaProvider from './getSolanaProvider';
 import { Web3Provider } from '@ethersproject/providers';
 import { providers } from 'ethers';
 
+// TODO: Improve this, make it so it can detect Phantom when other wallets are installed
 const detectPhantomMultiChainProvider = async (): Promise<PhantomInjectedProvider | null> => {
   const anyWindow: any = window;
   const timeout = 2000;

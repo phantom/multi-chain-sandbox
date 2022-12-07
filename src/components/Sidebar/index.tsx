@@ -1,13 +1,20 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import { GRAY, REACT_GRAY, PURPLE, WHITE, DARK_GRAY } from '../../constants';
+import { GRAY, REACT_GRAY, PURPLE, WHITE, DARK_GRAY, LIGHT_GRAY } from '../../constants';
 
 import { hexToRGB } from '../../utils';
 
 import Button from '../Button';
 import { ConnectedAccounts, ConnectedMethods } from '../../App';
-import { PhantomEthereumProvider, PhantomProviderType, SupportedChainIcons, SupportedEVMChainIds } from '../../types';
+import {
+  PhantomEthereumProvider,
+  PhantomProviderType,
+  SupportedChainIcons,
+  SupportedChainNames,
+  SupportedEVMChainIds,
+  SupportedSolanaChainIds,
+} from '../../types';
 import getChainName from '../../utils/getChainName';
 import getChainIcon from '../../utils/getChainIcon';
 
@@ -66,12 +73,14 @@ const Subtitle = styled.h5`
 
 const Pre = styled.pre`
   margin-bottom: 5px;
+  margin-right: auto;
 `;
 
 const AccountRow = styled.div`
   display: flex;
-  :first-of-type {
-    margin-bottom: 8px;
+  margin-bottom: 8px;
+  :last-of-type {
+    margin-bottom: 0;
   }
 `;
 
@@ -139,6 +148,32 @@ const Tag = styled.p`
   }
 `;
 
+const Toggle = styled.button`
+  cursor: pointer;
+  width: 100%;
+  color: ${WHITE};
+  background-color: ${DARK_GRAY};
+  // padding: 15px 10px;
+  font-weight: 600;
+  outline: 0;
+  border: 0;
+  // border-radius: 6px;
+  user-select: none;
+  // display: flex;
+  // align-items: center;
+  // justify-content: center;
+  // position: relative;
+  &:hover {
+    background-color: ${hexToRGB(LIGHT_GRAY, 0.9)};
+  }
+  &:focus-visible&:not(:hover) {
+    background-color: ${hexToRGB(LIGHT_GRAY, 0.8)};
+  }
+  &:active {
+    background-color: ${LIGHT_GRAY};
+  }
+`;
+
 const ChainIcon = styled.img`
   height: ${(props) => props.height};
   width: ${(props) => props.height};
@@ -169,6 +204,7 @@ interface Props {
   connectedEthereumChainId: SupportedEVMChainIds | null;
   connectedAccounts: ConnectedAccounts;
   connect: () => Promise<void>;
+  switchEthereumChains: (chaindId: SupportedEVMChainIds) => Promise<void>;
 }
 
 // =============================================================================
@@ -176,8 +212,10 @@ interface Props {
 // =============================================================================
 [];
 const Sidebar = React.memo((props: Props) => {
-  const { connectedAccounts, connectedEthereumChainId, connectedMethods, connect } = props;
-  const switchChains = connectedMethods.find((method) => method.name === 'Switch Chains');
+  const { connectedAccounts, connectedEthereumChainId, connectedMethods, connect, switchEthereumChains } = props;
+  const backgroundEthereumChains = Object.values(SupportedEVMChainIds).filter(
+    (chainId) => chainId !== connectedEthereumChainId
+  );
   return (
     <Main>
       <Body>
@@ -191,40 +229,51 @@ const Sidebar = React.memo((props: Props) => {
             <div>
               <Pre>Connected as</Pre>
               <AccountRow>
-                <ChainIcon src={SupportedChainIcons.Solana} height="36px" />
-                <Badge>{connectedAccounts?.solana?.toBase58()}</Badge>
-                {/* <Badge>{connectedAccounts?.solana?.toBase58()}</Badge> */}
-              </AccountRow>
-              <AccountRow>
-                <ChainIcon src={getChainIcon(connectedEthereumChainId)} height="36px" />
-                {/* <Badge>
-                  <div>{connectedAccounts?.ethereum}</div>
-                  <div>{getChainName(connectedEthereumChainId)}</div>
-                </Badge> */}
+                <ChainIcon src={SupportedChainIcons.Ethereum} height="36px" />
                 <Badge>{connectedAccounts?.ethereum}</Badge>
               </AccountRow>
-
+              <AccountRow>
+                <ChainIcon src={SupportedChainIcons.Polygon} height="36px" />
+                <Badge>{connectedAccounts?.ethereum}</Badge>
+              </AccountRow>
+              {/* <AccountRow>
+                <ChainIcon src={getChainIcon(connectedEthereumChainId)} height="36px" />
+                <Badge>{connectedAccounts?.ethereum}</Badge>
+              </AccountRow> */}
+              <AccountRow>
+                <ChainIcon src={SupportedChainIcons.Solana} height="36px" />
+                <Badge>{connectedAccounts?.solana?.toBase58()}</Badge>
+              </AccountRow>
               <Divider />
             </div>
-            {connectedMethods.map((method, i) => (
-              <Button key={`${method.name}-${i}`} onClick={method.onClick}>
-                {/* <ChainIconAbsolute
-                  src={method.chain === 'solana' ? SupportedChainIcons.Solana : getChainIcon(connectedEthereumChainId)}
-                /> */}
-                {/* <ChainIcon
-                  src={method.chain === 'solana' ? SupportedChainIcons.Solana : getChainIcon(connectedEthereumChainId)}
-                  height="16px"
-                /> */}
-                <span>{method.name}</span>
-              </Button>
-            ))}
-            <div style={{ display: 'flex' }}>
-              {Object.keys(SupportedEVMChainIds).map((key, i) => (
-                <Button key={`${SupportedEVMChainIds[key]}-${i}`} onClick={switchChains.onClick}>
-                  {getChainName(SupportedEVMChainIds[key])}
+            <select>
+              <ChainIcon src={getChainIcon(connectedEthereumChainId)} height="16px" />
+              <Pre>{getChainName(connectedEthereumChainId)}</Pre>
+              {backgroundEthereumChains.map((chainId, i) => (
+                <option
+                  key={`${chainId}-${i}`}
+                  onClick={() => switchEthereumChains(chainId)}
+                >{`Switch to ${getChainName(chainId)}`}</option>
+              ))}
+            </select>
+            {connectedMethods
+              .filter((method) => method.chain === 'ethereum')
+              .map((method, i) => (
+                <Button key={`${method.name}-${i}`} onClick={method.onClick}>
+                  {method.name}
                 </Button>
               ))}
+            <div>
+              <ChainIcon src={getChainIcon(connectedEthereumChainId)} height="16px" />
+              <Pre>{SupportedChainNames.SolanaDevnet}</Pre>
             </div>
+            {connectedMethods
+              .filter((method) => method.chain === 'solana')
+              .map((method, i) => (
+                <Button key={`${method.name}-${i}`} onClick={method.onClick}>
+                  {method.name}
+                </Button>
+              ))}
           </>
         ) : (
           // not connected
