@@ -16,8 +16,10 @@ type SolanaRequestMethod =
   | 'signAllTransactions'
   | 'signMessage';
 
+/** This is a subset of Phantom's supported JSON RPC methods */
 type EthereumRequestMethod =
   | 'eth_gasPrice'
+  | 'eth_getTransactionCount'
   | 'eth_getTransactionReceipt'
   | 'eth_sendTransaction'
   | 'eth_requestAccounts'

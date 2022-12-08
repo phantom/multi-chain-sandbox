@@ -7,16 +7,7 @@ import { hexToRGB } from '../../utils';
 
 import Button from '../Button';
 import { ConnectedAccounts, ConnectedMethods } from '../../App';
-import {
-  PhantomEthereumProvider,
-  PhantomProviderType,
-  SupportedChainIcons,
-  SupportedChainNames,
-  SupportedEVMChainIds,
-  SupportedSolanaChainIds,
-} from '../../types';
-import getChainName from '../../utils/getChainName';
-import getChainIcon from '../../utils/getChainIcon';
+import { SupportedChainIcons, SupportedChainNames, SupportedEVMChainIds } from '../../types';
 
 // =============================================================================
 // Styled Components
@@ -178,21 +169,6 @@ const Toggle = styled.button`
 const ChainIcon = styled.img`
   height: ${(props) => props.height};
   width: ${(props) => props.height};
-  border-radius: 6px 0 0 6px;
-`;
-
-// const ChainIcon = styled.img`
-//   height: ${(props) => props.height};
-//   width: ${(props) => props.height};
-//   border-radius: ${(props) => props.height};
-//   margin-right: 6px;
-// `;
-
-const ChainIconAbsolute = styled.img`
-  height: 45px;
-  width: 45px;
-  position: absolute;
-  left: 0px;
   border-radius: 6px 0 0 6px;
 `;
 

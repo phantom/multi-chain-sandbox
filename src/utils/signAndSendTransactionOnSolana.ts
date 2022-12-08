@@ -4,7 +4,7 @@ import { PhantomSolanaProvider } from '../types';
 
 /**
  * Signs and sends transaction
- * @param   {PhantomSolanaProvider} provider    a Phantom Provider
+ * @param   {PhantomSolanaProvider} provider    a Phantom solana provider
  * @param   {Transaction}     transaction a transaction to sign
  * @returns {Transaction}                 a signed transaction
  */

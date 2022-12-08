@@ -1,7 +1,7 @@
 import { PhantomSolanaProvider } from '../types';
 
 /**
- * Signs a message
+ * Signs a message on Solana
  * @param   {PhantomSolanaProvider} provider a Phantom Provider
  * @param   {String}          message  a message to sign
  * @returns {Any}                      TODO(get type)

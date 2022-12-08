@@ -1,15 +1,18 @@
-import { Web3Provider } from '@ethersproject/providers';
+import { PhantomEthereumProvider } from '../types';
 
 /**
- * TODO
+ * Signs a message on Ethereum
+ * @param provider a Phantom ethereum provider
+ * @param message a message to sign
+ * @returns a signed message is hex string format
  */
-const signMessageOnEthereum = async (provider: any, message: string): Promise<string> => {
+const signMessageOnEthereum = async (provider: PhantomEthereumProvider, message: string): Promise<string> => {
   try {
     const signedMessage = await provider.request({
       method: 'personal_sign',
       params: [message, provider.selectedAddress],
     });
-    return signedMessage;
+    if (typeof signedMessage === 'string') return signedMessage;
   } catch (error) {
     console.warn(error);
     throw new Error(error.message);

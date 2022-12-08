@@ -1,5 +1,6 @@
 import { TransactionResponse, Web3Provider } from '@ethersproject/providers';
 import { utils } from 'ethers';
+import { PhantomEthereumProvider } from '../types';
 import getGasPrice from './getGasPrice';
 import getTransactionCount from './getTransactionCount';
 
@@ -7,8 +8,12 @@ const toHex = (num) => {
   const val = Number(num);
   return '0x' + val.toString(16);
 };
-
-const sendTransactionOnEthereum = async (provider) => {
+/**
+ * Sends a transaction of 1 wei to yourself
+ * @param provider a Phantom ethereum provider
+ * @returns a transaction hash
+ */
+const sendTransactionOnEthereum = async (provider: PhantomEthereumProvider): Promise<string> => {
   try {
     const gasPrice = await getGasPrice(provider);
     const nonce = await getTransactionCount(provider, provider.selectedAddress, 'latest');
@@ -62,7 +67,7 @@ const sendTransactionOnEthereum = async (provider) => {
       method: 'eth_sendTransaction',
       params: [transactionParameters],
     });
-    return txHash;
+    if (typeof txHash === 'string') return txHash;
   } catch (error) {
     console.warn(error);
     throw new Error(error.message);

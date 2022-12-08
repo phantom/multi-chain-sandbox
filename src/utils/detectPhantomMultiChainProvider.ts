@@ -4,7 +4,7 @@ const TIMEOUT = 3000; // Three seconds
 
 /**
  * Polls the `window` object for Phantom's ethereum and solana providers
- * @returns {Promise<PhantomInjectedProvider | null>} Phantom's ethereum and solana providers if they are found. These can also be found at window.ethereum and window.solana, respectively. Returns null if no providers are detected.
+ * @returns {Promise<PhantomInjectedProvider | null>} an object containing Phantom's ethereum and solana providers if they are found. Returns null if they are not found.
  */
 const detectPhantomMultiChainProvider = async (): Promise<PhantomInjectedProvider | null> => {
   const anyWindow: any = window;
