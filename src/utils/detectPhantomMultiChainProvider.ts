@@ -16,7 +16,7 @@ const detectPhantomMultiChainProvider = async (): Promise<PhantomInjectedProvide
       handleProvider();
     } else {
       // Listen for events that may indicate Phantom has been added to the window
-      anyWindow.addEventListener('phantom.ethereum#initialized', handleProvider, { once: true });
+      anyWindow.addEventListener('ethereum#initialized', handleIfPhantomIsAvailable, { once: true });
       anyWindow.addEventListener('load', handleIfPhantomIsAvailable, { once: true });
       document.addEventListener('DOMContentLoaded', handleIfPhantomIsAvailable, { once: true });
 
@@ -46,7 +46,7 @@ const detectPhantomMultiChainProvider = async (): Promise<PhantomInjectedProvide
 
       const { phantom } = anyWindow;
 
-      if (phantom) {
+      if (isPhantomAvailable()) {
         resolve(phantom);
       } else {
         const message = 'Unable to detect Phantom. Please make sure that Phantom is installed before proceeding.';
