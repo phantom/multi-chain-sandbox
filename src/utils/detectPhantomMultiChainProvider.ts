@@ -1,31 +1,33 @@
 import { PhantomInjectedProvider } from '../types';
-import getEthereumProvider from './getEthereumProvider';
-import getSolanaProvider from './getSolanaProvider';
-import { Web3Provider } from '@ethersproject/providers';
-import { providers } from 'ethers';
 
-const TIMEOUT = 2000; // Two seconds
+const TIMEOUT = 3000; // Three seconds
 
-// TODO: Improve this, make it so it can detect Phantom when other wallets are installed
+/**
+ * Polls the `window` object for Phantom's ethereum and solana providers
+ * @returns {Promise<PhantomInjectedProvider | null>} Phantom's ethereum and solana providers if they are found. These can also be found at window.ethereum and window.solana, respectively. Returns null if no providers are detected.
+ */
 const detectPhantomMultiChainProvider = async (): Promise<PhantomInjectedProvider | null> => {
   const anyWindow: any = window;
   let hasBeenHandled = false;
 
   return new Promise((resolve) => {
     if (isPhantomAvailable()) {
+      // If Phantom is immediately detected, resolve it
       handleProvider();
     } else {
+      // Listen for events that may indicate Phantom has been added to the window
       anyWindow.addEventListener('phantom.ethereum#initialized', handleProvider, { once: true });
       anyWindow.addEventListener('load', handleIfPhantomIsAvailable, { once: true });
       document.addEventListener('DOMContentLoaded', handleIfPhantomIsAvailable, { once: true });
+
+      // Do a final check after time has passed
       setTimeout(() => {
         handleProvider();
       }, TIMEOUT);
     }
 
     function isPhantomAvailable() {
-      if (anyWindow?.phantom?.ethereum?.isPhantom && anyWindow?.phantom?.solana?.isPhantom) return true;
-      return false;
+      return anyWindow?.phantom?.ethereum?.isPhantom && anyWindow?.phantom?.solana?.isPhantom;
     }
 
     function handleIfPhantomIsAvailable() {
@@ -37,6 +39,7 @@ const detectPhantomMultiChainProvider = async (): Promise<PhantomInjectedProvide
     function handleProvider() {
       if (hasBeenHandled) return;
       hasBeenHandled = true;
+
       anyWindow.removeEventListener('phantom.ethereum#initialized', handleProvider);
       anyWindow.removeEventListener('load', handleIfPhantomIsAvailable);
       document.removeEventListener('DOMContentLoaded', handleIfPhantomIsAvailable);
@@ -53,40 +56,5 @@ const detectPhantomMultiChainProvider = async (): Promise<PhantomInjectedProvide
     }
   });
 };
-
-// const detectPhantomMultiChainProvider = async (): Promise<PhantomInjectedProvider | null> => {
-//   const anyWindow: any = window;
-//   const timeout = 2000;
-//   let handled = false;
-
-//   return new Promise((resolve) => {
-//     if (anyWindow.ethereum) {
-//       handleProviders();
-//     } else {
-//       anyWindow.addEventListener('ethereum#initialized', handleProviders, { once: true });
-//       setTimeout(() => {
-//         handleProviders();
-//       }, timeout);
-//     }
-
-//     function handleProviders() {
-//       if (handled) {
-//         return;
-//       }
-//       handled = true;
-//       anyWindow.removeEventListener('ethereum#initialized', handleProviders);
-
-//       const { phantom } = anyWindow;
-
-//       if (phantom) {
-//         resolve(phantom);
-//       } else {
-//         const message = phantom ? 'Non-Phantom providers detected.' : 'Unable to detect window.ethereum.';
-//         console.error(message);
-//         resolve(null);
-//       }
-//     }
-//   });
-// };
 
 export default detectPhantomMultiChainProvider;
