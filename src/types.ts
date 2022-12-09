@@ -1,6 +1,4 @@
 import { PublicKey, Transaction, VersionedTransaction, SendOptions } from '@solana/web3.js';
-import { providers } from 'ethers';
-import { Web3Provider } from '@ethersproject/providers';
 
 type DisplayEncoding = 'utf8' | 'hex';
 
@@ -16,10 +14,12 @@ type SolanaRequestMethod =
   | 'signAllTransactions'
   | 'signMessage';
 
-/** This is a subset of Phantom's supported JSON RPC methods */
+/**
+ * A subset of Phantom's supported JSON RPC methods
+ * Phantom accepts most JSON RPC requests that are expected of wallets
+ * For more information, please see: https://ethereum.org/en/developers/docs/apis/json-rpc/
+ */
 type EthereumRequestMethod =
-  | 'eth_gasPrice'
-  | 'eth_getTransactionCount'
   | 'eth_getTransactionReceipt'
   | 'eth_sendTransaction'
   | 'eth_requestAccounts'
@@ -85,8 +85,8 @@ export interface TLog {
 export enum SupportedEVMChainIds {
   EthereumMainnet = '0x1',
   EthereumGoerli = '0x5',
-  PolygonMainnet = '0x137',
-  PolygonMumbai = '0x80001',
+  PolygonMainnet = '0x89',
+  PolygonMumbai = '0x13881',
 }
 
 export enum SupportedSolanaChainIds {
@@ -103,16 +103,6 @@ export enum SupportedChainNames {
   SolanaMainnet = 'Solana Mainnet Beta',
   SolanaTestnet = 'Solana Testnet',
   SolanaDevnet = 'Solana Devnet',
-}
-
-export enum SupportedChainTypes {
-  EthereumMainnet = 'ethereum',
-  EthereumGoerli = 'ethereum',
-  PolygonMainnet = 'polygon',
-  PolygonMumbai = 'polygon',
-  SolanaMainnet = 'solana',
-  SolanaTestnet = 'solana',
-  SolanaDevnet = 'solana',
 }
 
 export enum SupportedChainIcons {

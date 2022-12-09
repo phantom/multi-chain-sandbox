@@ -331,7 +331,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
           providerType: 'ethereum',
           status: 'info',
           method: 'eth_sendTransaction',
-          message: `Sending transaction ${txHash}`,
+          message: `Sending transaction ${txHash} on ${getChainName(ethereum.chainId)}`,
         });
         // poll tx status until it is confirmed in a block, fails, or 30 seconds pass
         pollEthereumTransactionReceipt(txHash, ethereum, createLog);

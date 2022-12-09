@@ -1,6 +1,7 @@
 import { PhantomInjectedProvider } from '../types';
 
-const TIMEOUT = 3000; // Three seconds
+const POLLING_INTERVAL = 1000; // One second
+const MAX_POLLS = 5;
 
 /**
  * Polls the `window` object for Phantom's ethereum and solana providers
@@ -8,52 +9,23 @@ const TIMEOUT = 3000; // Three seconds
  */
 const detectPhantomMultiChainProvider = async (): Promise<PhantomInjectedProvider | null> => {
   const anyWindow: any = window;
-  let hasBeenHandled = false;
+  let count = 0;
 
   return new Promise((resolve) => {
-    if (isPhantomAvailable()) {
-      // If Phantom is immediately detected, resolve it
-      handleProvider();
-    } else {
-      // Listen for events that may indicate Phantom has been added to the window
-      anyWindow.addEventListener('ethereum#initialized', handleIfPhantomIsAvailable, { once: true });
-      anyWindow.addEventListener('load', handleIfPhantomIsAvailable, { once: true });
-      document.addEventListener('DOMContentLoaded', handleIfPhantomIsAvailable, { once: true });
-
-      // Do a final check after time has passed
-      setTimeout(() => {
-        handleProvider();
-      }, TIMEOUT);
-    }
-
-    function isPhantomAvailable() {
-      return anyWindow?.phantom?.ethereum?.isPhantom && anyWindow?.phantom?.solana?.isPhantom;
-    }
-
-    function handleIfPhantomIsAvailable() {
-      if (isPhantomAvailable()) {
-        handleProvider();
-      }
-    }
-
-    function handleProvider() {
-      if (hasBeenHandled) return;
-      hasBeenHandled = true;
-
-      anyWindow.removeEventListener('phantom.ethereum#initialized', handleProvider);
-      anyWindow.removeEventListener('load', handleIfPhantomIsAvailable);
-      document.removeEventListener('DOMContentLoaded', handleIfPhantomIsAvailable);
-
-      const { phantom } = anyWindow;
-
-      if (isPhantomAvailable()) {
-        resolve(phantom);
-      } else {
-        const message = 'Unable to detect Phantom. Please make sure that Phantom is installed before proceeding.';
-        console.error(message);
+    const interval = setInterval(() => {
+      if (count === MAX_POLLS) {
+        clearInterval(interval);
         resolve(null);
+        window.open('https://phantom.app/', '_blank');
       }
-    }
+
+      const provider = anyWindow.phantom;
+      if (provider?.ethereum?.isPhantom && provider?.solana?.isPhantom) {
+        clearInterval(interval);
+        resolve(provider);
+      }
+      count++;
+    }, POLLING_INTERVAL);
   });
 };
 

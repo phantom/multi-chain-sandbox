@@ -2,6 +2,7 @@ export { default as createTransferTransactionV0 } from './createTransferTransact
 export { default as detectPhantomMultiChainProvider } from './detectPhantomMultiChainProvider';
 export { default as getChainName } from './getChainName';
 export { default as hexToRGB } from './hexToRGB';
+export { default as numToHexString } from './numToHexString';
 export { default as pollEthereumTransactionReceipt } from './pollEthereumTransactionReceipt';
 export { default as pollSolanaSignatureStatus } from './pollSolanaSignatureStatus';
 export { default as sendTransactionOnEthereum } from './sendTransactionOnEthereum';

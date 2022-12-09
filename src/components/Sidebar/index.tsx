@@ -194,7 +194,6 @@ interface Props {
 // =============================================================================
 // Main Component
 // =============================================================================
-[];
 const Sidebar = React.memo((props: Props) => {
   const { connectedAccounts, connectedEthereumChainId, connectedMethods, connect } = props;
   return (
@@ -251,8 +250,7 @@ const Sidebar = React.memo((props: Props) => {
               .map((method, i) => (
                 <Button
                   key={`${method.name}-${i}`}
-                  onClick={() => method.onClick(SupportedEVMChainIds.PolygonMumbai)}
-                  // onClick={() => method.onClick(SupportedEVMChainIds.EthereumMainnet)}
+                  onClick={() => method.onClick(SupportedEVMChainIds.EthereumMainnet)}
                 >
                   {method.name}
                 </Button>

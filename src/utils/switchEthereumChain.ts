@@ -6,14 +6,16 @@ import { PhantomEthereumProvider, SupportedEVMChainIds } from '../types';
  * @param chainId an EVM chainId to switch to
  * @returns null if successful
  */
-const switchEthereumChain = async (provider: PhantomEthereumProvider, chainId: SupportedEVMChainIds): Promise<null> => {
+const switchEthereumChain = async (
+  provider: PhantomEthereumProvider,
+  chainId: SupportedEVMChainIds
+): Promise<unknown> => {
   try {
     const response = await provider.request({
       method: 'wallet_switchEthereumChain',
       params: [{ chainId }],
     });
-    // @ts-ignore:next-line
-    if (response === null) return response;
+    return response;
   } catch (error) {
     console.warn(error);
     throw new Error(error.message);
