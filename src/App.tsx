@@ -1,7 +1,7 @@
 /**
- * @DEV: If the sandbox is throwing dependency errors, chances are you need to clear your browser history.
- * This will trigger a re-install of the dependencies in the sandbox – which should fix things right up.
- * Alternatively, you can fork this sandbox to refresh the dependencies manually.
+ * @DEV: If you are viewing this from within CodeSandbox, you won't be able to interact with Phantom.
+ * In the browser on the right-hand side of your screen, click "Open in New Window"
+ * Alternatively, you can visit https://472igc.csb.app/.
  */
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import styled from 'styled-components';
