@@ -30,7 +30,6 @@ import CodeSandboxPrompt from './components/CodeSandboxPrompt';
 // =============================================================================
 
 const StyledApp = styled.div`
-  position: relative;
   display: flex;
   flex-direction: row;
   height: 100vh;
@@ -542,7 +541,6 @@ const StatelessApp = React.memo((props: Props) => {
 
   return (
     <StyledApp>
-      {window.location.href === 'codesandbox.io' && <CodeSandboxPrompt />}
       <Sidebar
         connectedAccounts={connectedAccounts}
         connectedEthereumChainId={connectedEthereumChainId}
