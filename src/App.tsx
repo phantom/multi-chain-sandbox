@@ -23,12 +23,14 @@ import {
 import { PhantomInjectedProvider, SupportedEVMChainIds, TLog } from './types';
 
 import { Logs, Sidebar, NoProvider } from './components';
+import CodeSandboxPrompt from './components/CodeSandboxPrompt';
 
 // =============================================================================
 // Styled Components
 // =============================================================================
 
 const StyledApp = styled.div`
+  position: relative;
   display: flex;
   flex-direction: row;
   height: 100vh;
@@ -540,6 +542,7 @@ const StatelessApp = React.memo((props: Props) => {
 
   return (
     <StyledApp>
+      {window.location.href === 'codesandbox.io' && <CodeSandboxPrompt />}
       <Sidebar
         connectedAccounts={connectedAccounts}
         connectedEthereumChainId={connectedEthereumChainId}
