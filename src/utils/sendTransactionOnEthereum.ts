@@ -10,13 +10,13 @@ const sendTransactionOnEthereum = async (provider: PhantomEthereumProvider): Pro
   try {
     /**
      * Required parameters for a simple transfer of 1 wei
-     * Phantom will automatically handle:
-     * gas, nonce, chainId
+     * Phantom will automatically handle nonce & chainId.
      * gasPrice will be handled by Phantom and customizable by end users during confirmation
      */
     const transactionParameters = {
       from: provider.selectedAddress, // must match user's active address
       to: provider.selectedAddress, // required except during contract publications
+      gas: numToHexString(30000), // the max amount of gas to be used in the tx
       value: numToHexString(1), // only required when transferring ether. in this case, send 1 wei
     };
 
