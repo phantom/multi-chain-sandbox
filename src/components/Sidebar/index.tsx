@@ -248,10 +248,7 @@ const Sidebar = React.memo((props: Props) => {
             {connectedMethods
               .filter((method) => method.chain === 'ethereum')
               .map((method, i) => (
-                <Button
-                  key={`${method.name}-${i}`}
-                  onClick={() => method.onClick(SupportedEVMChainIds.EthereumMainnet)}
-                >
+                <Button key={`${method.name}-${i}`} onClick={() => method.onClick(SupportedEVMChainIds.PolygonMumbai)}>
                   {method.name}
                 </Button>
               ))}
