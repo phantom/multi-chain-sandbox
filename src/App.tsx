@@ -161,6 +161,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
         });
       } else {
         /**
+         * If disconnected, `accountsChanged` will return an empty array
          * In this case dApps could...
          *
          * 1. Not do anything
@@ -169,20 +170,27 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
 
         createLog({
           providerType: 'ethereum',
-          status: 'info',
-          method: 'eth_requestAccounts',
-          message: 'Attempting to switch accounts.',
+          status: 'warning',
+          method: 'accountsChanged',
+          message: 'Disconnected from Phantom',
         });
 
-        // attempt to reconnect
-        ethereum.request({ method: 'eth_requestAccounts' }).catch((error) => {
-          createLog({
-            providerType: 'ethereum',
-            status: 'error',
-            method: 'eth_requestAccounts',
-            message: `Failed to re-connect: ${error.message}`,
-          });
-        });
+        // createLog({
+        //   providerType: 'ethereum',
+        //   status: 'info',
+        //   method: 'eth_requestAccounts',
+        //   message: 'Attempting to switch accounts.',
+        // });
+
+        // // attempt to reconnect
+        // ethereum.request({ method: 'eth_requestAccounts' }).catch((error) => {
+        //   createLog({
+        //     providerType: 'ethereum',
+        //     status: 'error',
+        //     method: 'eth_requestAccounts',
+        //     message: `Failed to re-connect: ${error.message}`,
+        //   });
+        // });
       }
     });
 
@@ -252,17 +260,6 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
     const { solana, ethereum } = provider;
 
     try {
-      await solana.connect();
-    } catch (error) {
-      createLog({
-        providerType: 'solana',
-        status: 'error',
-        method: 'connect',
-        message: error.message,
-      });
-    }
-
-    try {
       const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
       createLog({
         providerType: 'ethereum',
@@ -275,6 +272,17 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
         providerType: 'ethereum',
         status: 'error',
         method: 'eth_requestAccounts',
+        message: error.message,
+      });
+    }
+
+    try {
+      await solana.connect();
+    } catch (error) {
+      createLog({
+        providerType: 'solana',
+        status: 'error',
+        method: 'connect',
         message: error.message,
       });
     }
