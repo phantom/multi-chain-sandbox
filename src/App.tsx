@@ -23,7 +23,6 @@ import {
 import { PhantomInjectedProvider, SupportedEVMChainIds, TLog } from './types';
 
 import { Logs, Sidebar, NoProvider } from './components';
-import CodeSandboxPrompt from './components/CodeSandboxPrompt';
 
 // =============================================================================
 // Styled Components

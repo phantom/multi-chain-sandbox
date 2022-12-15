@@ -2,7 +2,6 @@ import React from 'react';
 import styled from 'styled-components';
 
 import { REACT_GRAY } from '../../constants';
-import CodeSandboxPrompt from '../CodeSandboxPrompt';
 
 // =============================================================================
 // Styled Components
@@ -23,7 +22,6 @@ const StyledMain = styled.main`
 const NoProvider = () => {
   return (
     <StyledMain>
-      <CodeSandboxPrompt />
       <h2>Could not find a provider</h2>
     </StyledMain>
   );
