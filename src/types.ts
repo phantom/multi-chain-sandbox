@@ -1,4 +1,4 @@
-import { PublicKey, Transaction, VersionedTransaction, SendOptions } from '@solana/web3.js';
+import { PublicKey, SendOptions, Transaction, VersionedTransaction } from '@solana/web3.js';
 
 type DisplayEncoding = 'utf8' | 'hex';
 
@@ -24,9 +24,12 @@ type EthereumRequestMethod =
   | 'eth_sendTransaction'
   | 'eth_requestAccounts'
   | 'personal_sign'
+  | 'eth_accounts'
+  | 'eth_chainId'
   | 'wallet_switchEthereumChain';
 
 type PhantomRequestMethod = SolanaRequestMethod | EthereumRequestMethod;
+
 interface SolanaConnectOptions {
   onlyIfTrusted: boolean;
 }
@@ -36,11 +39,11 @@ export interface PhantomSolanaProvider {
   isConnected: boolean | null;
   signAndSendTransaction: (
     transaction: Transaction | VersionedTransaction,
-    opts?: SendOptions
+    opts?: SendOptions,
   ) => Promise<{ signature: string; publicKey: PublicKey }>;
   signTransaction: (transaction: Transaction | VersionedTransaction) => Promise<Transaction | VersionedTransaction>;
   signAllTransactions: (
-    transactions: (Transaction | VersionedTransaction)[]
+    transactions: (Transaction | VersionedTransaction)[],
   ) => Promise<(Transaction | VersionedTransaction)[]>;
   signMessage: (message: Uint8Array | string, display?: DisplayEncoding) => Promise<any>;
   connect: (opts?: Partial<SolanaConnectOptions>) => Promise<{ publicKey: PublicKey }>;
@@ -51,12 +54,8 @@ export interface PhantomSolanaProvider {
 
 // TODO _events and _eventsCount
 export interface PhantomEthereumProvider {
-  chainId: SupportedEVMChainIds;
   isMetaMask?: boolean; // will be removed after beta
   isPhantom: boolean;
-  networkVersion: string;
-  selectedAddress: string;
-  isConnected: () => boolean;
   on: (event: EthereumEvent, handler: (args: any) => void) => void;
   request: (args: { method: EthereumRequestMethod; params?: unknown[] | object }) => Promise<unknown>;
   _metamask: {
@@ -74,6 +73,7 @@ export type PhantomProviderType = 'solana' | 'ethereum';
 export type PhantomEvent = EthereumEvent | SolanaEvent;
 
 export type Status = 'success' | 'warning' | 'error' | 'info';
+
 export interface TLog {
   providerType: PhantomProviderType;
   status: Status;

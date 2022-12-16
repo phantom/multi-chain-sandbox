@@ -8,7 +8,6 @@ import { REACT_GRAY } from '../../constants';
 // =============================================================================
 
 const StyledMain = styled.main`
-  position: relative;
   padding: 20px;
   height: 100vh;
   background-color: ${REACT_GRAY};
