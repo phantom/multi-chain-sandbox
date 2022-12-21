@@ -5,7 +5,7 @@
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
-import { clusterApiUrl, Connection, PublicKey } from '@solana/web3.js';
+import { Connection, PublicKey } from '@solana/web3.js';
 
 import {
   createTransferTransactionV0,
@@ -45,7 +45,8 @@ const StyledApp = styled.div`
 // Constants
 // =============================================================================
 
-const solanaNetwork = clusterApiUrl('devnet');
+// NB: This URL will only work for Phantom sandbox apps! Please do not use this for your project. If you are running this locally we recommend using one of Solana's public RPC endpoints
+const solanaNetwork = 'https://phantom-phantom-f0ad.mainnet.rpcpool.com/';
 const connection = new Connection(solanaNetwork);
 const message = 'To avoid digital dognappers, sign below to authenticate with CryptoCorgis.';
 
@@ -60,15 +61,15 @@ export type ConnectedAccounts = {
 
 export type ConnectedMethods =
   | {
-  chain: string;
-  name: string;
-  onClick: (props?: any) => Promise<string>;
-}
+      chain: string;
+      name: string;
+      onClick: (props?: any) => Promise<string>;
+    }
   | {
-  chain: string;
-  name: string;
-  onClick: (chainId?: any) => Promise<void | boolean>;
-};
+      chain: string;
+      name: string;
+      onClick: (chainId?: any) => Promise<void | boolean>;
+    };
 
 interface Props {
   connectedAccounts: ConnectedAccounts;
@@ -94,7 +95,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
     (log: TLog) => {
       return setLogs((logs) => [...logs, log]);
     },
-    [setLogs],
+    [setLogs]
   );
 
   const clearLogs = useCallback(() => {
@@ -173,7 +174,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
       const { ethereum } = provider;
       return await ensureEthereumChain(ethereum, chainId, createLog);
     },
-    [provider, createLog],
+    [provider, createLog]
   );
 
   /** SendTransaction via Ethereum Provider */
@@ -203,7 +204,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
         });
       }
     },
-    [provider, createLog, isEthereumChainIdReady, ethereumChainId],
+    [provider, createLog, isEthereumChainIdReady, ethereumChainId]
   );
 
   // /** SignMessage via Solana Provider */
@@ -254,7 +255,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
         });
       }
     },
-    [provider, createLog, isEthereumChainIdReady],
+    [provider, createLog, isEthereumChainIdReady]
   );
 
   /**
