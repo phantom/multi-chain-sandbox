@@ -6,8 +6,7 @@ import { silentlyConnect } from './connect';
 export function setupEvents(
   { solana, ethereum }: PhantomInjectedProvider,
   createLog: (log: TLog) => void,
-  setEthereumChainId: (chainId: SupportedEVMChainIds) => void,
-  setEthereumSelectedAddress: (address: string) => void,
+  setEthereumSelectedAddress: (address: string) => void
 ) {
   // handle solana `connect` event
   solana.on('connect', (publicKey: PublicKey) => {
@@ -16,16 +15,6 @@ export function setupEvents(
       status: 'success',
       method: 'connect',
       message: `Connected to account ${publicKey.toBase58()}`,
-    });
-  });
-
-  // handle ethereum `connect` event
-  ethereum.on('connect', (connectionInfo: { chainId: SupportedEVMChainIds }) => {
-    createLog({
-      providerType: 'ethereum',
-      status: 'success',
-      method: 'connect',
-      message: `Connected to ${getChainName(connectionInfo.chainId)} (Chain ID: ${connectionInfo.chainId})`,
     });
   });
 
@@ -39,17 +28,8 @@ export function setupEvents(
     });
   });
 
-  // handle ethereum `disconnect` event
-  ethereum.on('disconnect', () => {
-    createLog({
-      providerType: 'ethereum',
-      status: 'warning',
-      method: 'disconnect',
-      message: '⚠️ Lost connection to the RPC',
-    });
-  });
-
   // handle ethereum `accountsChanged` event
+  // connecting, account switching, and disconnecting are all handled via this event
   ethereum.on('accountsChanged', (newAccounts: string[]) => {
     // if we're still connected, Phantom will return an array with 1 account
     if (newAccounts.length > 0) {
@@ -113,7 +93,6 @@ export function setupEvents(
 
     // handle ethereum chainChanged event
     ethereum.on('chainChanged', (chainId: SupportedEVMChainIds) => {
-      setEthereumChainId(chainId);
       createLog({
         providerType: 'ethereum',
         status: 'info',

@@ -7,15 +7,9 @@ import { getEthereumSelectedAddress } from './getEthereumSelectedAddress';
 export const connect = async ({ solana, ethereum }: PhantomInjectedProvider, createLog: (log: TLog) => void) => {
   let wasEthereumConnected: boolean | undefined;
   try {
-    wasEthereumConnected = !!await getEthereumSelectedAddress(ethereum);
+    wasEthereumConnected = !!(await getEthereumSelectedAddress(ethereum));
     if (!wasEthereumConnected) {
-      const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-      createLog({
-        providerType: 'ethereum',
-        status: 'success',
-        method: 'eth_requestAccounts',
-        message: `Connected to account ${accounts[0]}`,
-      });
+      await ethereum.request({ method: 'eth_requestAccounts' });
     }
   } catch (error) {
     createLog({
@@ -47,11 +41,8 @@ export const connect = async ({ solana, ethereum }: PhantomInjectedProvider, cre
 // Similar to solana.connect({onlyIfTrusted: true}) but for multi-chain
 // MULTI-CHAIN PROVIDER TIP: Must use the solana provider first, and only the call eth provider if the solana call is successful
 export const silentlyConnect = async (
-  {
-    solana,
-    ethereum,
-  }: PhantomInjectedProvider,
-  createLog: (log: TLog) => void,
+  { solana, ethereum }: PhantomInjectedProvider,
+  createLog: (log: TLog) => void
 ) => {
   let solanaPubKey: { publicKey: PublicKey } | undefined;
   try {
@@ -67,13 +58,7 @@ export const silentlyConnect = async (
 
   if (solanaPubKey) {
     try {
-      const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-      createLog({
-        providerType: 'ethereum',
-        status: 'success',
-        method: 'eth_requestAccounts',
-        message: `Connected to account ${accounts[0]}`,
-      });
+      await ethereum.request({ method: 'eth_requestAccounts' });
     } catch (error) {
       createLog({
         providerType: 'ethereum',

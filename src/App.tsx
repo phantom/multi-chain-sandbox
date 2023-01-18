@@ -25,7 +25,6 @@ import { Logs, NoProvider, Sidebar } from './components';
 import { connect, silentlyConnect } from './utils/connect';
 import { setupEvents } from './utils/setupEvents';
 import { ensureEthereumChain } from './utils/ensureEthereumChain';
-import { useEthereumChainIdState } from './utils/getEthereumChain';
 import { useEthereumSelectedAddress } from './utils/getEthereumSelectedAddress';
 
 // =============================================================================
@@ -73,7 +72,6 @@ export type ConnectedMethods =
 
 interface Props {
   connectedAccounts: ConnectedAccounts;
-  connectedEthereumChainId: SupportedEVMChainIds | undefined;
   connectedMethods: ConnectedMethods[];
   handleConnect: () => Promise<void>;
   logs: TLog[];
@@ -102,7 +100,6 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
     setLogs([]);
   }, [setLogs]);
 
-  const [ethereumChainId, setEthereumChainId] = useEthereumChainIdState(provider?.ethereum);
   const [ethereumSelectedAddres, setEthereumSelectedAddress] = useEthereumSelectedAddress(provider?.ethereum);
 
   /** Side effects to run once providers are detected */
@@ -112,12 +109,12 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
 
     // attempt to eagerly connect on initial startup
     silentlyConnect({ solana, ethereum }, createLog);
-    setupEvents({ solana, ethereum }, createLog, setEthereumChainId, setEthereumSelectedAddress);
+    setupEvents({ solana, ethereum }, createLog, setEthereumSelectedAddress);
 
     return () => {
       solana.disconnect();
     };
-  }, [provider, createLog, setEthereumChainId, setEthereumSelectedAddress]);
+  }, [provider, createLog, setEthereumSelectedAddress]);
 
   /** Connect to both Solana and Ethereum Providers */
   const handleConnect = useCallback(async () => {
@@ -191,7 +188,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
           providerType: 'ethereum',
           status: 'info',
           method: 'eth_sendTransaction',
-          message: `Sending transaction ${txHash} on ${ethereumChainId ? getChainName(ethereumChainId) : 'undefined'}`,
+          message: `Sending transaction ${txHash} on ${chainId ? getChainName(chainId) : 'undefined'}`,
         });
         // poll tx status until it is confirmed in a block, fails, or 30 seconds pass
         pollEthereumTransactionReceipt(txHash, ethereum, createLog);
@@ -204,7 +201,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
         });
       }
     },
-    [provider, createLog, isEthereumChainIdReady, ethereumChainId]
+    [provider, createLog, isEthereumChainIdReady]
   );
 
   // /** SignMessage via Solana Provider */
@@ -320,7 +317,6 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
       solana: provider?.solana?.publicKey,
       ethereum: ethereumSelectedAddres,
     },
-    connectedEthereumChainId: ethereumChainId,
     connectedMethods,
     handleConnect,
     logs,
@@ -333,16 +329,11 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
 // =============================================================================
 
 const StatelessApp = React.memo((props: Props) => {
-  const { connectedAccounts, connectedEthereumChainId, connectedMethods, handleConnect, logs, clearLogs } = props;
+  const { connectedAccounts, connectedMethods, handleConnect, logs, clearLogs } = props;
 
   return (
     <StyledApp>
-      <Sidebar
-        connectedAccounts={connectedAccounts}
-        connectedEthereumChainId={connectedEthereumChainId}
-        connectedMethods={connectedMethods}
-        connect={handleConnect}
-      />
+      <Sidebar connectedAccounts={connectedAccounts} connectedMethods={connectedMethods} connect={handleConnect} />
       <Logs connectedAccounts={connectedAccounts} logs={logs} clearLogs={clearLogs} />
     </StyledApp>
   );
