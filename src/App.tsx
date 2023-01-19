@@ -100,7 +100,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
     setLogs([]);
   }, [setLogs]);
 
-  const [ethereumSelectedAddres, setEthereumSelectedAddress] = useEthereumSelectedAddress(provider?.ethereum);
+  const [ethereumSelectedAddress, setEthereumSelectedAddress] = useEthereumSelectedAddress(provider?.ethereum);
 
   /** Side effects to run once providers are detected */
   useEffect(() => {
@@ -315,7 +315,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
   return {
     connectedAccounts: {
       solana: provider?.solana?.publicKey,
-      ethereum: ethereumSelectedAddres,
+      ethereum: ethereumSelectedAddress,
     },
     connectedMethods,
     handleConnect,
