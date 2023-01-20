@@ -19,7 +19,7 @@ import {
   signMessageOnSolana,
 } from './utils';
 
-import { PhantomInjectedProvider, SupportedEVMChainIds, TLog } from './types';
+import { PhantomInjectedProvider, SupportedEVMChainIds, SupportedSolanaChainIds, TLog } from './types';
 
 import { Logs, NoProvider, Sidebar } from './components';
 import { connect, silentlyConnect } from './utils/connect';
@@ -27,6 +27,9 @@ import { setupEvents } from './utils/setupEvents';
 import { ensureEthereumChain } from './utils/ensureEthereumChain';
 import { useEthereumChainIdState } from './utils/getEthereumChain';
 import { useEthereumSelectedAddress } from './utils/getEthereumSelectedAddress';
+import ERC20Contract from './utils/requests/ethERC20';
+import ERC721Contract from './utils/requests/ethERC721';
+import ERC1155Contract from './utils/requests/ethERC1155';
 
 // =============================================================================
 // Styled Components
@@ -59,7 +62,7 @@ export type ConnectedAccounts = {
   ethereum: string | null;
 };
 
-export type ConnectedMethods =
+export type ConnectedMethod =
   | {
       chain: string;
       name: string;
@@ -71,10 +74,14 @@ export type ConnectedMethods =
       onClick: (chainId?: any) => Promise<void | boolean>;
     };
 
+export type ConnectedMethods = {
+  [chainId in SupportedEVMChainIds & SupportedSolanaChainIds]: ConnectedMethod;
+};
+
 interface Props {
   connectedAccounts: ConnectedAccounts;
   connectedEthereumChainId: SupportedEVMChainIds | undefined;
-  connectedMethods: ConnectedMethods[];
+  connectedMethods: ConnectedMethods;
   handleConnect: () => Promise<void>;
   logs: TLog[];
   clearLogs: () => void;
@@ -206,6 +213,199 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
     },
     [provider, createLog, isEthereumChainIdReady, ethereumChainId]
   );
+  /** Approve ERC20 Token via Ethereum Provider */
+  const handleApproveERC20TokenOnEthereum = useCallback(
+    async (chainId) => {
+      // set ethereum provider to the correct chainId
+      const ready = await isEthereumChainIdReady(chainId);
+      if (!ready) return;
+      const { ethereum } = provider;
+      try {
+        const erc20Contract = new ERC20Contract(ethereum);
+
+        // send the transaction up to the network
+        const txHash = await erc20Contract.approve((ethereum as any).selectedAddress);
+
+        createLog({
+          providerType: 'ethereum',
+          status: 'info',
+          method: 'eth_sendTransaction',
+          message: `Sending transaction ${txHash} on ${ethereumChainId ? getChainName(ethereumChainId) : 'undefined'}`,
+        });
+        // poll tx status until it is confirmed in a block, fails, or 30 seconds pass
+        pollEthereumTransactionReceipt(txHash, ethereum, createLog);
+      } catch (error) {
+        createLog({
+          providerType: 'ethereum',
+          status: 'error',
+          method: 'eth_sendTransaction',
+          message: error.message,
+        });
+      }
+    },
+    [provider, createLog, isEthereumChainIdReady, ethereumChainId]
+  );
+
+  /** Revoke ERC20 Token via Ethereum Provider */
+  const handleRevokeERC20TokenOnEthereum = useCallback(
+    async (chainId) => {
+      // set ethereum provider to the correct chainId
+      const ready = await isEthereumChainIdReady(chainId);
+      if (!ready) return;
+      const { ethereum } = provider;
+      try {
+        const erc20Contract = new ERC20Contract(ethereum);
+
+        // send the transaction up to the network
+        const txHash = await erc20Contract.revoke((ethereum as any).selectedAddress);
+
+        createLog({
+          providerType: 'ethereum',
+          status: 'info',
+          method: 'eth_sendTransaction',
+          message: `Sending transaction ${txHash} on ${ethereumChainId ? getChainName(ethereumChainId) : 'undefined'}`,
+        });
+        // poll tx status until it is confirmed in a block, fails, or 30 seconds pass
+        pollEthereumTransactionReceipt(txHash, ethereum, createLog);
+      } catch (error) {
+        createLog({
+          providerType: 'ethereum',
+          status: 'error',
+          method: 'eth_sendTransaction',
+          message: error.message,
+        });
+      }
+    },
+    [provider, createLog, isEthereumChainIdReady, ethereumChainId]
+  );
+  /** Approve ERC721 Token via Ethereum Provider */
+  const handleApproveERC721TokenOnEthereum = useCallback(
+    async (chainId) => {
+      // set ethereum provider to the correct chainId
+      const ready = await isEthereumChainIdReady(chainId);
+      if (!ready) return;
+      const { ethereum } = provider;
+      try {
+        const erc721Contract = new ERC721Contract(ethereum);
+
+        // send the transaction up to the network
+        const txHash = await erc721Contract.approve((ethereum as any).selectedAddress);
+
+        createLog({
+          providerType: 'ethereum',
+          status: 'info',
+          method: 'eth_sendTransaction',
+          message: `Sending transaction ${txHash} on ${ethereumChainId ? getChainName(ethereumChainId) : 'undefined'}`,
+        });
+        // poll tx status until it is confirmed in a block, fails, or 30 seconds pass
+        pollEthereumTransactionReceipt(txHash, ethereum, createLog);
+      } catch (error) {
+        createLog({
+          providerType: 'ethereum',
+          status: 'error',
+          method: 'eth_sendTransaction',
+          message: error.message,
+        });
+      }
+    },
+    [provider, createLog, isEthereumChainIdReady, ethereumChainId]
+  );
+  /** Revoke ERC721 Token via Ethereum Provider */
+  const handleRevokeERC721TokenOnEthereum = useCallback(
+    async (chainId) => {
+      // set ethereum provider to the correct chainId
+      const ready = await isEthereumChainIdReady(chainId);
+      if (!ready) return;
+      const { ethereum } = provider;
+      try {
+        const erc721Contract = new ERC721Contract(ethereum);
+
+        // send the transaction up to the network
+        const txHash = await erc721Contract.revoke((ethereum as any).selectedAddress);
+
+        createLog({
+          providerType: 'ethereum',
+          status: 'info',
+          method: 'eth_sendTransaction',
+          message: `Sending transaction ${txHash} on ${ethereumChainId ? getChainName(ethereumChainId) : 'undefined'}`,
+        });
+        // poll tx status until it is confirmed in a block, fails, or 30 seconds pass
+        pollEthereumTransactionReceipt(txHash, ethereum, createLog);
+      } catch (error) {
+        createLog({
+          providerType: 'ethereum',
+          status: 'error',
+          method: 'eth_sendTransaction',
+          message: error.message,
+        });
+      }
+    },
+    [provider, createLog, isEthereumChainIdReady, ethereumChainId]
+  );
+  /** Approve ERC1155 Token via Ethereum Provider */
+  const handleApproveERC1155TokenOnEthereum = useCallback(
+    async (chainId) => {
+      // set ethereum provider to the correct chainId
+      const ready = await isEthereumChainIdReady(chainId);
+      if (!ready) return;
+      const { ethereum } = provider;
+      try {
+        const erc1155Contract = new ERC1155Contract(ethereum);
+
+        // send the transaction up to the network
+        const txHash = await erc1155Contract.approve((ethereum as any).selectedAddress);
+
+        createLog({
+          providerType: 'ethereum',
+          status: 'info',
+          method: 'eth_sendTransaction',
+          message: `Sending transaction ${txHash} on ${ethereumChainId ? getChainName(ethereumChainId) : 'undefined'}`,
+        });
+        // poll tx status until it is confirmed in a block, fails, or 30 seconds pass
+        pollEthereumTransactionReceipt(txHash, ethereum, createLog);
+      } catch (error) {
+        createLog({
+          providerType: 'ethereum',
+          status: 'error',
+          method: 'eth_sendTransaction',
+          message: error.message,
+        });
+      }
+    },
+    [provider, createLog, isEthereumChainIdReady, ethereumChainId]
+  );
+  /** Revoke ERC1155 Token via Ethereum Provider */
+  const handleRevokeERC1155TokenOnEthereum = useCallback(
+    async (chainId) => {
+      // set ethereum provider to the correct chainId
+      const ready = await isEthereumChainIdReady(chainId);
+      if (!ready) return;
+      const { ethereum } = provider;
+      try {
+        const erc1155Contract = new ERC1155Contract(ethereum);
+
+        // send the transaction up to the network
+        const txHash = await erc1155Contract.revoke((ethereum as any).selectedAddress);
+
+        createLog({
+          providerType: 'ethereum',
+          status: 'info',
+          method: 'eth_sendTransaction',
+          message: `Sending transaction ${txHash} on ${ethereumChainId ? getChainName(ethereumChainId) : 'undefined'}`,
+        });
+        // poll tx status until it is confirmed in a block, fails, or 30 seconds pass
+        pollEthereumTransactionReceipt(txHash, ethereum, createLog);
+      } catch (error) {
+        createLog({
+          providerType: 'ethereum',
+          status: 'error',
+          method: 'eth_sendTransaction',
+          message: error.message,
+        });
+      }
+    },
+    [provider, createLog, isEthereumChainIdReady, ethereumChainId]
+  );
 
   // /** SignMessage via Solana Provider */
   const handleSignMessageOnSolana = useCallback(async () => {
@@ -257,6 +457,88 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
     },
     [provider, createLog, isEthereumChainIdReady]
   );
+  /** SignTypedMessage (v1) via Ethereum Provider */
+  // https://eips.ethereum.org/EIPS/eip-712
+  const handleSignTypedMessageV1OnEthereum = useCallback(
+    async (chainId) => {
+      // set ethereum provider to the correct chainId
+      const ready = await isEthereumChainIdReady(chainId);
+      if (!ready) return;
+      const { ethereum } = provider;
+      try {
+        const signedMessage = await signMessageOnEthereum(ethereum, 'v1');
+        createLog({
+          providerType: 'ethereum',
+          status: 'success',
+          method: 'eth_signTypedData',
+          message: `Message signed: ${signedMessage}`,
+        });
+        return signedMessage;
+      } catch (error) {
+        createLog({
+          providerType: 'ethereum',
+          status: 'error',
+          method: 'eth_signTypedData',
+          message: error.message,
+        });
+      }
+    },
+    [provider, createLog, isEthereumChainIdReady]
+  );
+  /** SignTypedMessage (v3) via Ethereum Provider */
+  const handleSignTypedMessageV3OnEthereum = useCallback(
+    async (chainId) => {
+      // set ethereum provider to the correct chainId
+      const ready = await isEthereumChainIdReady(chainId);
+      if (!ready) return;
+      const { ethereum } = provider;
+      try {
+        const signedMessage = await signMessageOnEthereum(ethereum, 'v3');
+        createLog({
+          providerType: 'ethereum',
+          status: 'success',
+          method: 'eth_signTypedData_v3',
+          message: `Message signed: ${signedMessage}`,
+        });
+        return signedMessage;
+      } catch (error) {
+        createLog({
+          providerType: 'ethereum',
+          status: 'error',
+          method: 'eth_signTypedData_v3',
+          message: error.message,
+        });
+      }
+    },
+    [provider, createLog, isEthereumChainIdReady]
+  );
+  /** SignTypedMessage (v4) via Ethereum Provider */
+  const handleSignTypedMessageV4OnEthereum = useCallback(
+    async (chainId) => {
+      // set ethereum provider to the correct chainId
+      const ready = await isEthereumChainIdReady(chainId);
+      if (!ready) return;
+      const { ethereum } = provider;
+      try {
+        const signedMessage = await signMessageOnEthereum(ethereum, 'v4');
+        createLog({
+          providerType: 'ethereum',
+          status: 'success',
+          method: 'eth_signTypedData_v4',
+          message: `Message signed: ${signedMessage}`,
+        });
+        return signedMessage;
+      } catch (error) {
+        createLog({
+          providerType: 'ethereum',
+          status: 'error',
+          method: 'eth_signTypedData_v4',
+          message: error.message,
+        });
+      }
+    },
+    [provider, createLog, isEthereumChainIdReady]
+  );
 
   /**
    * Disconnect from Solana
@@ -280,38 +562,99 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
   }, [provider, createLog]);
 
   const connectedMethods = useMemo(() => {
-    return [
+    const evmMethods = [
       {
-        chain: 'solana',
-        name: 'Sign and Send Transaction',
-        onClick: handleSignAndSendTransactionOnSolana,
-      },
-      {
-        chain: 'ethereum',
         name: 'Send Transaction',
         onClick: handleSendTransactionOnEthereum,
       },
+      // EIP20: https://eips.ethereum.org/EIPS/eip-20 (transfer, approve)
+      [
+        {
+          name: 'Approve ERC20 Token',
+          onClick: handleApproveERC20TokenOnEthereum,
+        },
+        {
+          name: 'Revoke ERC20 Token',
+          onClick: handleRevokeERC20TokenOnEthereum,
+        },
+      ],
+      // EIP721: https://eips.ethereum.org/EIPS/eip-721 (approve)
+      // Approve an address to send the NFT
+      [
+        {
+          name: 'Approve ERC721 Token',
+          onClick: handleApproveERC721TokenOnEthereum,
+        },
+        {
+          name: 'Revoke ERC721 Token',
+          onClick: handleRevokeERC721TokenOnEthereum,
+        },
+      ],
+      // EIP1155: https://eips.ethereum.org/EIPS/eip-1155 (setApprovalForAll)
+      // Approve an address to send the NFT
+      [
+        {
+          name: 'Approve ERC1155 Token (all)',
+          onClick: handleApproveERC1155TokenOnEthereum,
+        },
+        {
+          name: 'Revoke ERC1155 Token (all)',
+          onClick: handleRevokeERC1155TokenOnEthereum,
+        },
+      ],
       {
-        chain: 'solana',
-        name: 'Sign Message',
-        onClick: handleSignMessageOnSolana,
-      },
-      {
-        chain: 'ethereum',
         name: 'Sign Message',
         onClick: handleSignMessageOnEthereum,
       },
-      {
-        chain: 'solana',
-        name: 'Disconnect',
-        onClick: handleDisconnect,
-      },
+      [
+        {
+          name: 'Sign Typed Message (v1)',
+          onClick: handleSignTypedMessageV1OnEthereum,
+        },
+        {
+          name: 'Sign Typed Message (v3)',
+          onClick: handleSignTypedMessageV3OnEthereum,
+        },
+        {
+          name: 'Sign Typed Message (v4)',
+          onClick: handleSignTypedMessageV4OnEthereum,
+        },
+      ],
     ];
+
+    return {
+      [SupportedEVMChainIds.EthereumGoerli]: evmMethods,
+      [SupportedEVMChainIds.PolygonMainnet]: evmMethods,
+      [SupportedSolanaChainIds.SolanaMainnet]: [
+        {
+          name: 'Sign and Send Transaction',
+          onClick: handleSignAndSendTransactionOnSolana,
+        },
+
+        {
+          name: 'Sign Message',
+          onClick: handleSignMessageOnSolana,
+        },
+        {
+          name: 'Disconnect',
+          onClick: handleDisconnect,
+        },
+      ],
+    };
   }, [
     handleSignAndSendTransactionOnSolana,
     handleSendTransactionOnEthereum,
     handleSignMessageOnSolana,
     handleSignMessageOnEthereum,
+    handleApproveERC20TokenOnEthereum,
+    handleApproveERC721TokenOnEthereum,
+    handleApproveERC1155TokenOnEthereum,
+    handleRevokeERC20TokenOnEthereum,
+    handleRevokeERC721TokenOnEthereum,
+    handleRevokeERC1155TokenOnEthereum,
+    handleSignTypedMessageV1OnEthereum,
+    handleSignTypedMessageV3OnEthereum,
+    handleSignTypedMessageV4OnEthereum,
     handleDisconnect,
   ]);
 

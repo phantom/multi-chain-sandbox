@@ -23,6 +23,9 @@ type EthereumRequestMethod =
   | 'eth_getTransactionReceipt'
   | 'eth_sendTransaction'
   | 'eth_requestAccounts'
+  | 'eth_signTypedData'
+  | 'eth_signTypedData_v3'
+  | 'eth_signTypedData_v4'
   | 'personal_sign'
   | 'eth_accounts'
   | 'eth_chainId'
@@ -39,11 +42,11 @@ export interface PhantomSolanaProvider {
   isConnected: boolean | null;
   signAndSendTransaction: (
     transaction: Transaction | VersionedTransaction,
-    opts?: SendOptions,
+    opts?: SendOptions
   ) => Promise<{ signature: string; publicKey: PublicKey }>;
   signTransaction: (transaction: Transaction | VersionedTransaction) => Promise<Transaction | VersionedTransaction>;
   signAllTransactions: (
-    transactions: (Transaction | VersionedTransaction)[],
+    transactions: (Transaction | VersionedTransaction)[]
   ) => Promise<(Transaction | VersionedTransaction)[]>;
   signMessage: (message: Uint8Array | string, display?: DisplayEncoding) => Promise<any>;
   connect: (opts?: Partial<SolanaConnectOptions>) => Promise<{ publicKey: PublicKey }>;

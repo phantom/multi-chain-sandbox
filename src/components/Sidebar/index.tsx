@@ -5,7 +5,7 @@ import { DARK_GRAY, GRAY, LIGHT_GRAY, PURPLE, REACT_GRAY, WHITE } from '../../co
 import { hexToRGB } from '../../utils';
 import Button from '../Button';
 import { ConnectedAccounts, ConnectedMethods } from '../../App';
-import { SupportedChainIcons, SupportedChainNames, SupportedEVMChainIds } from '../../types';
+import { SupportedChainIcons, SupportedChainNames, SupportedEVMChainIds, SupportedSolanaChainIds } from '../../types';
 
 // =============================================================================
 // Styled Components
@@ -20,6 +20,9 @@ const Main = styled.main`
   padding: 20px;
   align-items: center;
   background-color: ${REACT_GRAY};
+  box-sizing: border-box;
+  height: 100vh;
+  max-height: 100vh;
 
   > * {
     margin-bottom: 10px;
@@ -35,6 +38,9 @@ const Body = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  box-sizing: border-box;
+  flex: 1;
+  max-height: 100%;
 
   button {
     margin-bottom: 15px;
@@ -193,12 +199,20 @@ const ChainHeader = styled.div`
   margin: 5px 0 10px;
 `;
 
+const ButtonRow = styled.div`
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+`;
+
 // =============================================================================
 // Typedefs
 // =============================================================================
 
 interface Props {
-  connectedMethods: ConnectedMethods[];
+  connectedMethods: ConnectedMethods;
   connectedEthereumChainId: SupportedEVMChainIds | null;
   connectedAccounts: ConnectedAccounts;
   connect: () => Promise<void>;
@@ -208,12 +222,30 @@ interface Props {
 // Main Component
 // =============================================================================
 const Sidebar = React.memo((props: Props) => {
+  function renderConnectedMethods(methods, chainId) {
+    return methods.map((method, i) => {
+      if (Array.isArray(method)) {
+        return <ButtonRow>{renderConnectedMethods(method, chainId)}</ButtonRow>;
+      }
+
+      return (
+        <Button
+          data-test-id={`${chainId}-${method.name}`}
+          key={`${method.name}-${i}`}
+          onClick={() => method.onClick(chainId)}
+        >
+          {method.name}
+        </Button>
+      );
+    });
+  }
+
   const { connectedAccounts, connectedEthereumChainId, connectedMethods, connect } = props;
   return (
     <Main>
       <Body>
         <Link>
-          <img src='https://phantom.app/img/phantom-logo.svg' alt='Phantom' width='200' />
+          <img src="https://phantom.app/img/phantom-logo.svg" alt="Phantom" width="200" />
           <Subtitle>Multi-chain Sandbox</Subtitle>
         </Link>
         {connectedAccounts?.solana ? (
@@ -222,87 +254,78 @@ const Sidebar = React.memo((props: Props) => {
             <div>
               <Pre>Connected as</Pre>
               <AccountRow>
-                <ChainIcon src={SupportedChainIcons.Ethereum} height='36px' />
+                <ChainIcon src={SupportedChainIcons.Ethereum} height="36px" />
                 <Badge>{connectedAccounts?.ethereum}</Badge>
               </AccountRow>
               <AccountRow>
-                <ChainIcon src={SupportedChainIcons.Polygon} height='36px' />
+                <ChainIcon src={SupportedChainIcons.Polygon} height="36px" />
                 <Badge>{connectedAccounts?.ethereum}</Badge>
               </AccountRow>
               <AccountRow>
-                <ChainIcon src={SupportedChainIcons.Solana} height='36px' />
+                <ChainIcon src={SupportedChainIcons.Solana} height="36px" />
                 <Badge>{connectedAccounts?.solana?.toBase58()}</Badge>
               </AccountRow>
               <Divider />
             </div>
-            <ChainHeader>
-              <ChainIcon
-                src={SupportedChainIcons.Ethereum}
-                height='16px'
-                style={{ marginRight: '6px', borderRadius: '6px' }}
-              />
-              <Tag>{SupportedChainNames.EthereumGoerli}</Tag>
-            </ChainHeader>
-            {connectedMethods
-              .filter((method) => method.chain === 'ethereum')
-              .map((method, i) => (
-                <Button data-test-id={`ethereum-goerli-${method.name}`}
-                        key={`${method.name}-${i}`}
-                        onClick={() => method.onClick(SupportedEVMChainIds.EthereumGoerli)}>
-                  {method.name}
-                </Button>
-              ))}
-            <ChainHeader>
-              <ChainIcon
-                src={SupportedChainIcons.Polygon}
-                height='16px'
-                style={{ marginRight: '6px', borderRadius: '6px' }}
-              />
-              <Tag>{SupportedChainNames.PolygonMainnet}</Tag>
-            </ChainHeader>
-            {connectedMethods
-              .filter((method) => method.chain === 'ethereum')
-              .map((method, i) => (
-                <Button
-                  data-test-id={`polygon-mainnet-${method.name}`}
-                  key={`${method.name}-${i}`}
-                  onClick={() => method.onClick(SupportedEVMChainIds.PolygonMainnet)}
-                >
-                  {method.name}
-                </Button>
-              ))}
-            <ChainHeader>
-              <ChainIcon
-                src={SupportedChainIcons.Solana}
-                height='16px'
-                style={{ marginRight: '6px', borderRadius: '6px' }}
-              />
-              <Tag>{SupportedChainNames.SolanaMainnet}</Tag>
-            </ChainHeader>
-            {connectedMethods
-              .filter((method) => method.chain === 'solana')
-              .map((method, i) => (
-                <Button
-                  data-test-id={`solana-${method.name}`}
-                  key={`${method.name}-${i}`} onClick={method.onClick}>
-                  {method.name}
-                </Button>
-              ))}
+
+            <div style={{ overflowY: 'scroll' }}>
+              {/* Ethereum Goerli */}
+              <ChainHeader>
+                <ChainIcon
+                  src={SupportedChainIcons.Ethereum}
+                  height="16px"
+                  style={{ marginRight: '6px', borderRadius: '6px' }}
+                />
+                <Tag>{SupportedChainNames.EthereumGoerli}</Tag>
+              </ChainHeader>
+              {renderConnectedMethods(
+                connectedMethods[SupportedEVMChainIds.EthereumGoerli],
+                SupportedEVMChainIds.EthereumGoerli
+              )}
+
+              {/* Polygon Mainnet */}
+              <ChainHeader>
+                <ChainIcon
+                  src={SupportedChainIcons.Polygon}
+                  height="16px"
+                  style={{ marginRight: '6px', borderRadius: '6px' }}
+                />
+                <Tag>{SupportedChainNames.PolygonMainnet}</Tag>
+              </ChainHeader>
+              {renderConnectedMethods(
+                connectedMethods[SupportedEVMChainIds.PolygonMainnet],
+                SupportedEVMChainIds.PolygonMainnet
+              )}
+
+              {/* Solana */}
+              <ChainHeader>
+                <ChainIcon
+                  src={SupportedChainIcons.Solana}
+                  height="16px"
+                  style={{ marginRight: '6px', borderRadius: '6px' }}
+                />
+                <Tag>{SupportedChainNames.SolanaMainnet}</Tag>
+              </ChainHeader>
+              {renderConnectedMethods(
+                connectedMethods[SupportedSolanaChainIds.SolanaMainnet],
+                SupportedSolanaChainIds.SolanaMainnet
+              )}
+            </div>
           </>
         ) : (
           // not connected
-          <Button data-testid='connect-to-phantom' onClick={connect} style={{ marginTop: '15px' }}>
+          <Button data-testid="connect-to-phantom" onClick={connect} style={{ marginTop: '15px' }}>
             Connect to Phantom
           </Button>
         )}
       </Body>
       {/* 😊 💕  */}
-      <Tag>
+      <Tag style={{ marginTop: -16 }}>
         Made with{' '}
-        <span role='img' aria-label='Red Heart Emoji'>
+        <span role="img" aria-label="Red Heart Emoji">
           ❤️
         </span>{' '}
-        by the <a href='https://phantom.app'>Phantom</a> team
+        by the <a href="https://phantom.app">Phantom</a> team
       </Tag>
     </Main>
   );
