@@ -23,6 +23,7 @@ const Main = styled.main`
   box-sizing: border-box;
   height: 100vh;
   max-height: 100vh;
+  padding-bottom: 46px;
 
   > * {
     margin-bottom: 10px;
@@ -268,7 +269,7 @@ const Sidebar = React.memo((props: Props) => {
               <Divider />
             </div>
 
-            <div style={{ overflowY: 'scroll' }}>
+            <div style={{ overflowY: 'scroll', paddingRight: 16 }}>
               {/* Ethereum Goerli */}
               <ChainHeader>
                 <ChainIcon
@@ -320,7 +321,7 @@ const Sidebar = React.memo((props: Props) => {
         )}
       </Body>
       {/* 😊 💕  */}
-      <Tag style={{ marginTop: -16 }}>
+      <Tag>
         Made with{' '}
         <span role="img" aria-label="Red Heart Emoji">
           ❤️

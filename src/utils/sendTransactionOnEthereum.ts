@@ -29,7 +29,7 @@ const sendTransactionOnEthereum = async (
   try {
     const transactionParameters = await getTransactionParameters();
     const ethersProvider = new ethers.providers.Web3Provider(provider as ethers.providers.ExternalProvider);
-    const txHash = ethersProvider.send('eth_sendTransaction', [transactionParameters]);
+    const txHash = await ethersProvider.send('eth_sendTransaction', [transactionParameters]);
     if (typeof txHash === 'string') return txHash;
     throw new Error('did not get back a transaction hash');
   } catch (error) {
