@@ -9,8 +9,8 @@ import { getEthereumSelectedAddress } from './getEthereumSelectedAddress';
  * @returns a signed message is hex string format
  */
 const signTypedMessageOnEthereum = async (
-  version: 'v1' | 'v3' | 'v4',
-  provider: PhantomEthereumProvider
+  provider: PhantomEthereumProvider,
+  version: 'v1' | 'v3' | 'v4' | 'ethers'
 ): Promise<string> => {
   try {
     const selectedAddress = await getEthereumSelectedAddress(provider);
@@ -25,7 +25,10 @@ const signTypedMessageOnEthereum = async (
         signedMessage = await signTypedMessageV3(selectedAddress, provider);
         break;
       case 'v4':
-        signedMessage = await signTypedMessageV4(provider);
+        signedMessage = await signTypedMessageV4(selectedAddress, provider);
+        break;
+      case 'ethers':
+        signedMessage = await signTypedMessageUsingEthers(provider);
         break;
     }
 
@@ -75,15 +78,27 @@ const msgParams = {
   },
 };
 
-// https://eips.ethereum.org/EIPS/eip-712#specification-of-the-web3-api
 const signTypedMessageV1 = async (selectedAddress: string, provider: PhantomEthereumProvider) => {
   return provider.request({
     method: 'eth_signTypedData',
-    params: [msgParams, selectedAddress],
+    params: [
+      [
+        {
+          type: 'string', // Any valid solidity type
+          name: 'Message', // Any string label you want
+          value: 'Hi, Alice!', // The value to sign
+        },
+        {
+          type: 'uint32',
+          name: 'A number',
+          value: '1337',
+        },
+      ],
+      selectedAddress,
+    ],
   });
 };
 
-// https://eips.ethereum.org/assets/eip-712/Example.js
 const signTypedMessageV3 = async (selectedAddress: string, provider: PhantomEthereumProvider) => {
   return provider.request({
     method: 'eth_signTypedData_v3',
@@ -91,7 +106,19 @@ const signTypedMessageV3 = async (selectedAddress: string, provider: PhantomEthe
   });
 };
 
-const signTypedMessageV4 = async (provider: PhantomEthereumProvider) => {
+// https://eips.ethereum.org/assets/eip-712/Example.js
+const signTypedMessageV4 = async (selectedAddress: string, provider: PhantomEthereumProvider) => {
+  return provider.request({
+    method: 'eth_signTypedData_v4',
+    params: [selectedAddress, msgParams],
+  });
+};
+
+// https://eips.ethereum.org/assets/eip-712/Example.js
+const signTypedMessageUsingEthers = async (provider: PhantomEthereumProvider) => {
+  const params = { ...msgParams };
+  delete params.types.EIP712Domain;
+
   const ethersProvider = new ethers.providers.Web3Provider(provider as ethers.providers.ExternalProvider);
   return ethersProvider.getSigner()._signTypedData(msgParams.domain, msgParams.types, msgParams.message);
 };

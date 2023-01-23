@@ -30,6 +30,7 @@ import { useEthereumSelectedAddress } from './utils/getEthereumSelectedAddress';
 import ERC20Contract from './utils/requests/ethERC20';
 import ERC721Contract from './utils/requests/ethERC721';
 import ERC1155Contract from './utils/requests/ethERC1155';
+import signTypedMessageOnEthereum from './utils/signTypedMessageOnEthereum';
 
 // =============================================================================
 // Styled Components
@@ -466,7 +467,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
       if (!ready) return;
       const { ethereum } = provider;
       try {
-        const signedMessage = await signMessageOnEthereum(ethereum, 'v1');
+        const signedMessage = await signTypedMessageOnEthereum(ethereum, 'v1');
         createLog({
           providerType: 'ethereum',
           status: 'success',
@@ -493,7 +494,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
       if (!ready) return;
       const { ethereum } = provider;
       try {
-        const signedMessage = await signMessageOnEthereum(ethereum, 'v3');
+        const signedMessage = await signTypedMessageOnEthereum(ethereum, 'v3');
         createLog({
           providerType: 'ethereum',
           status: 'success',
@@ -520,7 +521,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
       if (!ready) return;
       const { ethereum } = provider;
       try {
-        const signedMessage = await signMessageOnEthereum(ethereum, 'v4');
+        const signedMessage = await signTypedMessageOnEthereum(ethereum, 'v4');
         createLog({
           providerType: 'ethereum',
           status: 'success',
@@ -533,6 +534,34 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
           providerType: 'ethereum',
           status: 'error',
           method: 'eth_signTypedData_v4',
+          message: error.message,
+        });
+      }
+    },
+    [provider, createLog, isEthereumChainIdReady]
+  );
+
+  /** SignTypedMessage (v4) via Ethereum Provider using ethers.js */
+  const handleSignTypedMessageWithEthersOnEthereum = useCallback(
+    async (chainId) => {
+      // set ethereum provider to the correct chainId
+      const ready = await isEthereumChainIdReady(chainId);
+      if (!ready) return;
+      const { ethereum } = provider;
+      try {
+        const signedMessage = await signTypedMessageOnEthereum(ethereum, 'ethers');
+        createLog({
+          providerType: 'ethereum',
+          status: 'success',
+          method: 'eth_signTypedData',
+          message: `Message signed: ${signedMessage}`,
+        });
+        return signedMessage;
+      } catch (error) {
+        createLog({
+          providerType: 'ethereum',
+          status: 'error',
+          method: 'eth_signTypedData',
           message: error.message,
         });
       }
@@ -619,6 +648,10 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
           name: 'Sign Typed Message (v4)',
           onClick: handleSignTypedMessageV4OnEthereum,
         },
+        {
+          name: 'Sign Typed Message (ethers)',
+          onClick: handleSignTypedMessageWithEthersOnEthereum,
+        },
       ],
     ];
 
@@ -655,6 +688,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
     handleSignTypedMessageV1OnEthereum,
     handleSignTypedMessageV3OnEthereum,
     handleSignTypedMessageV4OnEthereum,
+    handleSignTypedMessageWithEthersOnEthereum,
     handleDisconnect,
   ]);
 
