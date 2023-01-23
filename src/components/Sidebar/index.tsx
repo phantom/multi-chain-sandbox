@@ -32,6 +32,10 @@ const Main = styled.main`
   @media (max-width: 768px) {
     width: 100%;
     height: auto;
+    flex: 1;
+    position: unset;
+    max-height: auto;
+    overflow: scroll;
   }
 `;
 

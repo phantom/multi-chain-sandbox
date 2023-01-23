@@ -20,6 +20,21 @@ const StyledSection = styled.section`
   background-color: ${BLACK};
   overflow: auto;
   font-family: monospace;
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    flex: initial;
+    flex-basis: 150px !important;
+  }
+`;
+
+const LogsContainer = styled.div`
+  @media (max-width: 768px) {
+    overflow: auto;
+    height: 110px;
+    display: flex;
+    flex-direction: column;
+  }
 `;
 
 const ClearLogsButton = styled(Button)`
@@ -63,9 +78,11 @@ const Logs = React.memo((props: Props) => {
     <StyledSection>
       {logs.length > 0 ? (
         <>
-          {logs.map((log, i) => (
-            <Log key={`${log.status}-${log.method}-${i}`} {...log} />
-          ))}
+          <LogsContainer>
+            {logs.map((log, i) => (
+              <Log key={`${log.status}-${log.method}-${i}`} {...log} />
+            ))}
+          </LogsContainer>
           <ClearLogsButton onClick={clearLogs}>Clear Logs</ClearLogsButton>
         </>
       ) : (

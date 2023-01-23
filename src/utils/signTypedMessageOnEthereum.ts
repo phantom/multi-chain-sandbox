@@ -75,10 +75,11 @@ const msgParams = {
   },
 };
 
+// https://eips.ethereum.org/EIPS/eip-712#specification-of-the-web3-api
 const signTypedMessageV1 = async (selectedAddress: string, provider: PhantomEthereumProvider) => {
   return provider.request({
     method: 'eth_signTypedData',
-    params: [selectedAddress, msgParams],
+    params: [msgParams, selectedAddress],
   });
 };
 
