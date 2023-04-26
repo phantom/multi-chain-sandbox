@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import { DARK_GRAY, GRAY, LIGHT_GRAY, PURPLE, REACT_GRAY, WHITE } from '../../constants';
+import { DARK_GRAY, GRAY, PURPLE, REACT_GRAY, WHITE } from '../../constants';
 import { hexToRGB } from '../../utils';
 import Button from '../Button';
 import { ConnectedAccounts, ConnectedMethods } from '../../App';
@@ -151,34 +151,6 @@ const Tag = styled.p`
   }
 `;
 
-const Toggle = styled.button`
-  cursor: pointer;
-  width: 100%;
-  color: ${WHITE};
-  background-color: ${DARK_GRAY};
-  // padding: 15px 10px;
-  font-weight: 600;
-  outline: 0;
-  border: 0;
-  // border-radius: 6px;
-  user-select: none;
-  // display: flex;
-  // align-items: center;
-  // justify-content: center;
-  // position: relative;
-  &:hover {
-    background-color: ${hexToRGB(LIGHT_GRAY, 0.9)};
-  }
-
-  &:focus-visible &:not(:hover) {
-    background-color: ${hexToRGB(LIGHT_GRAY, 0.8)};
-  }
-
-  &:active {
-    background-color: ${LIGHT_GRAY};
-  }
-`;
-
 const ChainIcon = styled.img`
   height: ${(props) => props.height};
   width: ${(props) => props.height};
@@ -199,7 +171,6 @@ const ChainHeader = styled.div`
 
 interface Props {
   connectedMethods: ConnectedMethods[];
-  connectedEthereumChainId: SupportedEVMChainIds | null;
   connectedAccounts: ConnectedAccounts;
   connect: () => Promise<void>;
 }
@@ -208,12 +179,12 @@ interface Props {
 // Main Component
 // =============================================================================
 const Sidebar = React.memo((props: Props) => {
-  const { connectedAccounts, connectedEthereumChainId, connectedMethods, connect } = props;
+  const { connectedAccounts, connectedMethods, connect } = props;
   return (
     <Main>
       <Body>
         <Link>
-          <img src='https://phantom.app/img/phantom-logo.svg' alt='Phantom' width='200' />
+          <img src="https://phantom.app/img/phantom-logo.svg" alt="Phantom" width="200" />
           <Subtitle>Multi-chain Sandbox</Subtitle>
         </Link>
         {connectedAccounts?.solana ? (
@@ -222,15 +193,15 @@ const Sidebar = React.memo((props: Props) => {
             <div>
               <Pre>Connected as</Pre>
               <AccountRow>
-                <ChainIcon src={SupportedChainIcons.Ethereum} height='36px' />
+                <ChainIcon src={SupportedChainIcons.Ethereum} height="36px" />
                 <Badge>{connectedAccounts?.ethereum}</Badge>
               </AccountRow>
               <AccountRow>
-                <ChainIcon src={SupportedChainIcons.Polygon} height='36px' />
+                <ChainIcon src={SupportedChainIcons.Polygon} height="36px" />
                 <Badge>{connectedAccounts?.ethereum}</Badge>
               </AccountRow>
               <AccountRow>
-                <ChainIcon src={SupportedChainIcons.Solana} height='36px' />
+                <ChainIcon src={SupportedChainIcons.Solana} height="36px" />
                 <Badge>{connectedAccounts?.solana?.toBase58()}</Badge>
               </AccountRow>
               <Divider />
@@ -238,7 +209,7 @@ const Sidebar = React.memo((props: Props) => {
             <ChainHeader>
               <ChainIcon
                 src={SupportedChainIcons.Ethereum}
-                height='16px'
+                height="16px"
                 style={{ marginRight: '6px', borderRadius: '6px' }}
               />
               <Tag>{SupportedChainNames.EthereumGoerli}</Tag>
@@ -246,27 +217,29 @@ const Sidebar = React.memo((props: Props) => {
             {connectedMethods
               .filter((method) => method.chain === 'ethereum')
               .map((method, i) => (
-                <Button data-test-id={`ethereum-goerli-${method.name}`}
-                        key={`${method.name}-${i}`}
-                        onClick={() => method.onClick(SupportedEVMChainIds.EthereumGoerli)}>
+                <Button
+                  data-test-id={`ethereum-goerli-${method.name}`}
+                  key={`${method.name}-${i}`}
+                  onClick={() => method.onClick(SupportedEVMChainIds.EthereumGoerli)}
+                >
                   {method.name}
                 </Button>
               ))}
             <ChainHeader>
               <ChainIcon
                 src={SupportedChainIcons.Polygon}
-                height='16px'
+                height="16px"
                 style={{ marginRight: '6px', borderRadius: '6px' }}
               />
-              <Tag>{SupportedChainNames.PolygonMainnet}</Tag>
+              <Tag>{SupportedChainNames.PolygonMumbai}</Tag>
             </ChainHeader>
             {connectedMethods
               .filter((method) => method.chain === 'ethereum')
               .map((method, i) => (
                 <Button
-                  data-test-id={`polygon-mainnet-${method.name}`}
+                  data-test-id={`polygon-mumbai-${method.name}`}
                   key={`${method.name}-${i}`}
-                  onClick={() => method.onClick(SupportedEVMChainIds.PolygonMainnet)}
+                  onClick={() => method.onClick(SupportedEVMChainIds.PolygonMumbai)}
                 >
                   {method.name}
                 </Button>
@@ -274,24 +247,22 @@ const Sidebar = React.memo((props: Props) => {
             <ChainHeader>
               <ChainIcon
                 src={SupportedChainIcons.Solana}
-                height='16px'
+                height="16px"
                 style={{ marginRight: '6px', borderRadius: '6px' }}
               />
-              <Tag>{SupportedChainNames.SolanaMainnet}</Tag>
+              <Tag>{SupportedChainNames.SolanaDevnet}</Tag>
             </ChainHeader>
             {connectedMethods
               .filter((method) => method.chain === 'solana')
               .map((method, i) => (
-                <Button
-                  data-test-id={`solana-${method.name}`}
-                  key={`${method.name}-${i}`} onClick={method.onClick}>
+                <Button data-test-id={`solana-${method.name}`} key={`${method.name}-${i}`} onClick={method.onClick}>
                   {method.name}
                 </Button>
               ))}
           </>
         ) : (
           // not connected
-          <Button data-testid='connect-to-phantom' onClick={connect} style={{ marginTop: '15px' }}>
+          <Button data-testid="connect-to-phantom" onClick={connect} style={{ marginTop: '15px' }}>
             Connect to Phantom
           </Button>
         )}
@@ -299,10 +270,10 @@ const Sidebar = React.memo((props: Props) => {
       {/* 😊 💕  */}
       <Tag>
         Made with{' '}
-        <span role='img' aria-label='Red Heart Emoji'>
+        <span role="img" aria-label="Red Heart Emoji">
           ❤️
         </span>{' '}
-        by the <a href='https://phantom.app'>Phantom</a> team
+        by the <a href="https://phantom.app">Phantom</a> team
       </Tag>
     </Main>
   );
