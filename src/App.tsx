@@ -5,7 +5,7 @@
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
-import { Connection, PublicKey } from '@solana/web3.js';
+import { clusterApiUrl, Connection, PublicKey } from '@solana/web3.js';
 
 import {
   createTransferTransactionV0,
@@ -44,8 +44,9 @@ const StyledApp = styled.div`
 // Constants
 // =============================================================================
 
+const solanaNetwork = clusterApiUrl('devnet');
 // NB: This URL will only work for Phantom sandbox apps! Please do not use this for your project. If you are running this locally we recommend using one of Solana's public RPC endpoints
-const solanaNetwork = 'https://phantom-phantom-f0ad.mainnet.rpcpool.com/';
+// const solanaNetwork = 'https://phantom-phantom-f0ad.mainnet.rpcpool.com/';
 const connection = new Connection(solanaNetwork);
 const message = 'To avoid digital dognappers, sign below to authenticate with CryptoCorgis.';
 

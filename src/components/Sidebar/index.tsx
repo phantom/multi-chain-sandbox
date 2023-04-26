@@ -231,15 +231,15 @@ const Sidebar = React.memo((props: Props) => {
                 height="16px"
                 style={{ marginRight: '6px', borderRadius: '6px' }}
               />
-              <Tag>{SupportedChainNames.PolygonMainnet}</Tag>
+              <Tag>{SupportedChainNames.PolygonMumbai}</Tag>
             </ChainHeader>
             {connectedMethods
               .filter((method) => method.chain === 'ethereum')
               .map((method, i) => (
                 <Button
-                  data-test-id={`polygon-mainnet-${method.name}`}
+                  data-test-id={`polygon-mumbai-${method.name}`}
                   key={`${method.name}-${i}`}
-                  onClick={() => method.onClick(SupportedEVMChainIds.PolygonMainnet)}
+                  onClick={() => method.onClick(SupportedEVMChainIds.PolygonMumbai)}
                 >
                   {method.name}
                 </Button>
@@ -250,7 +250,7 @@ const Sidebar = React.memo((props: Props) => {
                 height="16px"
                 style={{ marginRight: '6px', borderRadius: '6px' }}
               />
-              <Tag>{SupportedChainNames.SolanaMainnet}</Tag>
+              <Tag>{SupportedChainNames.SolanaDevnet}</Tag>
             </ChainHeader>
             {connectedMethods
               .filter((method) => method.chain === 'solana')
